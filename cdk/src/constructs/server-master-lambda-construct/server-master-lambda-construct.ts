@@ -1,6 +1,6 @@
 import { Duration } from "aws-cdk-lib";
 import { Vpc } from "aws-cdk-lib/aws-ec2";
-import { Runtime } from "aws-cdk-lib/aws-lambda";
+import { FunctionUrlAuthType, InvokeMode, Runtime } from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { Construct } from "constructs";
 import path = require("path");
@@ -20,7 +20,13 @@ export class ServerMasterLambdaConstruct extends Construct {
             timeout: Duration.seconds(30),
             vpc,
             allowPublicSubnet: true,
-            reservedConcurrentExecutions: 1
+            allowAllOutbound: false,
+            // reservedConcurrentExecutions: 1 // disabled since my account is at 10 so I can't reserve/limit this lambda
+            
+        })
+        this.lambdaFunction.addFunctionUrl({
+            authType: FunctionUrlAuthType.NONE,
+            invokeMode: InvokeMode.RESPONSE_STREAM
         })
     }
 }
