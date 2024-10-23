@@ -13,12 +13,14 @@ export class ServerMasterLambdaConstruct extends Construct {
         super(parent, 'ServerMasterLambdaConstruct')
 
         this.lambdaFunction = new NodejsFunction(this, 'Lambda', {
-            entry: path.resolve(__dirname, '../../lambda_code/gamerserver-master-lambda/index.ts'),
+            entry: path.resolve(__dirname, '../../lambda_code/gameserver-master-lambda/index.ts'),
             functionName: 'gameserver-master-lambda',
             handler: 'handler',
             runtime: Runtime.NODEJS_20_X,
             timeout: Duration.seconds(30),
             vpc,
+            allowPublicSubnet: true,
+            reservedConcurrentExecutions: 1
         })
     }
 }
