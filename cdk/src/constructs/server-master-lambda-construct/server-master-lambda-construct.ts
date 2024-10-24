@@ -2,6 +2,7 @@ import { Duration } from "aws-cdk-lib";
 import { Vpc } from "aws-cdk-lib/aws-ec2";
 import { FunctionUrlAuthType, InvokeMode, Runtime } from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
+import { RetentionDays } from "aws-cdk-lib/aws-logs";
 import { Construct } from "constructs";
 import path = require("path");
 
@@ -18,6 +19,7 @@ export class ServerMasterLambdaConstruct extends Construct {
             handler: 'handler',
             runtime: Runtime.NODEJS_20_X,
             timeout: Duration.seconds(30),
+            logRetention: RetentionDays.ONE_WEEK,
             vpc,
             allowPublicSubnet: true,
             allowAllOutbound: false,
@@ -26,7 +28,7 @@ export class ServerMasterLambdaConstruct extends Construct {
         })
         this.lambdaFunction.addFunctionUrl({
             authType: FunctionUrlAuthType.NONE,
-            invokeMode: InvokeMode.RESPONSE_STREAM
+            invokeMode: InvokeMode.BUFFERED
         })
     }
 }
