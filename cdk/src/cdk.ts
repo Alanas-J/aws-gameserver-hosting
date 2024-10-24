@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-import { CfnOutput } from "aws-cdk-lib"
 import { Stack } from "aws-cdk-lib"
 import { App } from "aws-cdk-lib"
 import { IpAddresses, SubnetType, Vpc } from "aws-cdk-lib/aws-ec2"
+import { ServerMasterLambdaConstruct } from "./constructs/server-master-lambda-construct/server-master-lambda-construct"
 
 const app = new App()
 export const gameServerStack = new Stack(app, 'GameServerStack', {
@@ -23,4 +23,5 @@ const vpc = new Vpc(gameServerStack, 'VPC', {
     natGateways: 0
 })
 
-new CfnOutput(gameServerStack, 'HelloWorld', { value: 'Hello world, a pointless cloudformation output!'})
+const serverMasterLambdaConstruct = new ServerMasterLambdaConstruct(gameServerStack, vpc)
+
