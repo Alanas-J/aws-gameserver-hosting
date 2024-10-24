@@ -1,4 +1,4 @@
-import { Duration } from "aws-cdk-lib";
+import { CfnOutput, Duration } from "aws-cdk-lib";
 import { Vpc } from "aws-cdk-lib/aws-ec2";
 import { FunctionUrlAuthType, InvokeMode, Runtime } from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
@@ -24,11 +24,12 @@ export class ServerMasterLambdaConstruct extends Construct {
             allowPublicSubnet: true,
             allowAllOutbound: false,
             // reservedConcurrentExecutions: 1 // disabled since my account is at 10 so I can't reserve/limit this lambda
-            
         })
-        this.lambdaFunction.addFunctionUrl({
+        const functionUrl = this.lambdaFunction.addFunctionUrl({
             authType: FunctionUrlAuthType.NONE,
-            invokeMode: InvokeMode.BUFFERED
+            invokeMode: InvokeMode.BUFFERED,
+            // CORS rules can be implemented here
         })
+        new CfnOutput(this, 'FunctionUrl', { value: functionUrl.url })   
     }
 }
