@@ -1,9 +1,15 @@
+import { RemovalPolicy } from "aws-cdk-lib";
 
 export const config = {
     // =========================  DNS Config  ==========================
     // If you want this stack to utilise a domain you've configured in Route 53 for vanity URLs.
     ROUTE53_ZONE_ID: '',
     DOMAIN_NAME: 'alanas-j.site',
+
+    // ========================= S3 Bucket Config ======================
+     // If the stack is destroyed what to do with the S3 Bucket.
+     // Retain saves any existing potential save files.
+    S3_BUCKET_REMOVAL_POLICY: RemovalPolicy.RETAIN,
 
     // ===================== EC2 Instance Config =======================
 
