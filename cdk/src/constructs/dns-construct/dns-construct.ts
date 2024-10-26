@@ -5,27 +5,33 @@ import { AllowedMethods, CachePolicy, Distribution, OriginProtocolPolicy, PriceC
 import { Duration } from "aws-cdk-lib";
 import { HttpOrigin } from "aws-cdk-lib/aws-cloudfront-origins";
 import { CloudFrontTarget } from "aws-cdk-lib/aws-route53-targets";
-import { DOMAIN_NAME, LAMBDA_SUBDOMAIN_NAME, LAMBDA_URL_ORIGIN } from "../../stack-config";
-import { CLOUDFRONT_SSL_CERTIFICATE_ARN, ROUTE53_ZONE_ID } from "../../personal_config";
+import { config } from "../../stack-config";
+import { CLOUDFRONT_SSL_CERTIFICATE_ARN, ROUTE53_ZONE_ID } from "../../personal_config"; // @TODO: Remove from code later
 
 
 export class DNSConstruct extends Construct {
     publicHostedZone: IPublicHostedZone
-    lambdaARecord: ARecord
+    lambdaARecord?: ARecord
     instanceARecords: ARecord[]
 
     constructor(parent: Construct) {
         super(parent, 'DNSConstruct')
+        this.publicHostedZone = PublicHostedZone.fromHostedZoneAttributes(this, 'DomainZoneLookup', { hostedZoneId: ROUTE53_ZONE_ID, zoneName: config.DOMAIN_NAME})
 
-        this.publicHostedZone = PublicHostedZone.fromHostedZoneAttributes(this, 'DomainZoneLookup', { hostedZoneId: ROUTE53_ZONE_ID, zoneName: DOMAIN_NAME})
-    
+        if (config.extras.LAMBDA_VANITY_URL.ENABLED) {
+            this.#provisionLambdaCloudFrontVanity()
+        }
+    }
+
+
+    #provisionLambdaCloudFrontVanity() {
         // Cloudfront needs to front the lambda URL as AWS doesn't support
         // attaching alias records onto function urls directly.
         // A Cloudfront distrubution is the cheapest way
         // API Gateway HTTP is $1.11 per month past the first year.
         const distribution = new Distribution(this, 'LambdaCloudfront', {
             certificate: Certificate.fromCertificateArn(this, 'DomainCertLookup', CLOUDFRONT_SSL_CERTIFICATE_ARN),
-            domainNames: [`${LAMBDA_SUBDOMAIN_NAME}.${DOMAIN_NAME}`],
+            domainNames: [`${config.extras.LAMBDA_VANITY_URL.SUBDOMAIN}.${config.DOMAIN_NAME}`],
             minimumProtocolVersion: SecurityPolicyProtocol.TLS_V1_1_2016,
             errorResponses: [
                 {
@@ -36,7 +42,7 @@ export class DNSConstruct extends Construct {
                 }
             ],
             defaultBehavior: {
-                origin: new HttpOrigin(LAMBDA_URL_ORIGIN, {
+                origin: new HttpOrigin(config.extras.LAMBDA_VANITY_URL.LAMBDA_URL_ORIGIN, {
                     protocolPolicy: OriginProtocolPolicy.HTTPS_ONLY,
                 }),
                 allowedMethods: AllowedMethods.ALLOW_ALL,
@@ -52,7 +58,7 @@ export class DNSConstruct extends Construct {
     
         this.lambdaARecord = new ARecord(this, 'LambdaAliasRecord', {
             zone: this.publicHostedZone,
-            recordName: `${LAMBDA_SUBDOMAIN_NAME}.${DOMAIN_NAME}`,
+            recordName: `${config.extras.LAMBDA_VANITY_URL.SUBDOMAIN}.${config.DOMAIN_NAME}`,
             target: RecordTarget.fromAlias(new CloudFrontTarget(distribution))
         });
     }

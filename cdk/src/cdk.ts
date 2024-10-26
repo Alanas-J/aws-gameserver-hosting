@@ -25,6 +25,5 @@ const vpc = new Vpc(gameServerStack, 'VPC', {
 })
 
 new ServerMasterLambdaConstruct(gameServerStack, vpc)
-
 new DNSConstruct(gameServerStack)
 
