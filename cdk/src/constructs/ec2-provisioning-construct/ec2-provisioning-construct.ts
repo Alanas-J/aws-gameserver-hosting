@@ -1,6 +1,7 @@
-import { Stack } from "aws-cdk-lib";
-import { Instance, InstanceType, MachineImage, Peer, Port, SecurityGroup, Vpc } from "aws-cdk-lib/aws-ec2";
+import { Stack, Tags } from "aws-cdk-lib";
+import { Instance, InstanceType, MachineImage, Peer, Port, SecurityGroup, SubnetType, Vpc } from "aws-cdk-lib/aws-ec2";
 import { Construct } from "constructs";
+import { serverInstances } from "../../stack-config";
 
 
 export class EC2ProvisioningConstruct extends Construct {
@@ -33,13 +34,21 @@ export class EC2ProvisioningConstruct extends Construct {
         gameserverSecurityGroup.addIngressRule(Peer.anyIpv6(), Port.udp(34197), 'Allow all ipv6/udp to connect to Factorio.');
 
 
-        this.gameservers = ['1'].map((instanceConfig: any, index) => {
-            return new Instance(this, 'Instance', {
+        this.gameservers = serverInstances.map((instanceConfig, index) => {
+            const serverName = instanceConfig.name ?? `gameserver${index}`;
+
+            const instance = new Instance(this, serverName+'Instance', {
                 vpc,
+                vpcSubnets: { subnetType: SubnetType.PUBLIC },
                 machineImage: MachineImage.latestAmazonLinux2023(),
-                instanceType: new InstanceType('t2.micro'),
-                securityGroup: gameserverSecurityGroup
+                instanceType: new InstanceType(instanceConfig.name),
+                securityGroup: gameserverSecurityGroup,
             })
+            Tags.of(instance).add('Server Name', serverName)
+
+            // @TODO: Storage + parametre store config
+
+            return instance
 
         }) 
 
