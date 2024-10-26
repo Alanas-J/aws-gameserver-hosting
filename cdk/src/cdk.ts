@@ -3,6 +3,7 @@ import { Stack } from "aws-cdk-lib"
 import { App } from "aws-cdk-lib"
 import { IpAddresses, SubnetType, Vpc } from "aws-cdk-lib/aws-ec2"
 import { ServerMasterLambdaConstruct } from "./constructs/server-master-lambda-construct/server-master-lambda-construct"
+import { DNSConstruct } from "./constructs/dns-construct/dns-construct"
 
 const app = new App()
 export const gameServerStack = new Stack(app, 'GameServerStack', {
@@ -23,5 +24,6 @@ const vpc = new Vpc(gameServerStack, 'VPC', {
     natGateways: 0
 })
 
-const serverMasterLambdaConstruct = new ServerMasterLambdaConstruct(gameServerStack, vpc)
+new ServerMasterLambdaConstruct(gameServerStack, vpc)
+new DNSConstruct(gameServerStack)
 
