@@ -1,16 +1,17 @@
 import { Stack } from "aws-cdk-lib";
-import { Instance, Peer, Port, SecurityGroup, Vpc } from "aws-cdk-lib/aws-ec2";
+import { Instance, InstanceType, MachineImage, Peer, Port, SecurityGroup, Vpc } from "aws-cdk-lib/aws-ec2";
 import { Construct } from "constructs";
 
 
 export class EC2ProvisioningConstruct extends Construct {
+    gameservers: Instance[]
 
     constructor(parent: Construct, vpc: Vpc, servermasterLambdaSG: SecurityGroup) {
         super(parent, 'EC2Provision');
 
         const gameserverSecurityGroup = new SecurityGroup(this, 'SecurityGroup', {
             vpc,
-            allowAllOutbound: true, // Need to allow for installation.
+            allowAllOutbound: true, // Need to allow for dependancy installation.
             description: 'Gameserver Security Group',
         });
 
@@ -19,6 +20,7 @@ export class EC2ProvisioningConstruct extends Construct {
 
         // Lambda @TODO: may need to change, might not use port 80 for node, yet to see. (might not want to give Node privelege enough to use port 80, but no idea how much power the 'ec2-user' has.)
         gameserverSecurityGroup.addIngressRule(Peer.securityGroupId(servermasterLambdaSG.securityGroupId), Port.tcp(80), 'Allow the servermaster lambda to access the HTTP port.');
+        servermasterLambdaSG.addEgressRule(Peer.securityGroupId(gameserverSecurityGroup.securityGroupId), Port.tcp(80), 'Allow the servermaster lambda use the HTTP port to reach gameservers.')
 
         // Minecraft Port
         gameserverSecurityGroup.addIngressRule(Peer.anyIpv4(), Port.tcp(25565), 'Allow all ipv4/tcp to connect to Minecraft.');
@@ -31,9 +33,13 @@ export class EC2ProvisioningConstruct extends Construct {
         gameserverSecurityGroup.addIngressRule(Peer.anyIpv6(), Port.udp(34197), 'Allow all ipv6/udp to connect to Factorio.');
 
 
-        ['1'].map(instanceConfig => {
-
-            return new Instance(this, 'Instance')
+        this.gameservers = ['1'].map((instanceConfig: any, index) => {
+            return new Instance(this, 'Instance', {
+                vpc,
+                machineImage: MachineImage.latestAmazonLinux2023(),
+                instanceType: new InstanceType('t2.micro'),
+                securityGroup: gameserverSecurityGroup
+            })
 
         }) 
 
