@@ -3,14 +3,12 @@ import { BlockPublicAccess, Bucket, BucketAccessControl } from "aws-cdk-lib/aws-
 import { config } from "../../stack-config";
 import { BucketDeployment, Source } from "aws-cdk-lib/aws-s3-deployment";
 import { RemovalPolicy } from "aws-cdk-lib";
-import { GatewayVpcEndpoint, GatewayVpcEndpointAwsService, InterfaceVpcEndpoint, Vpc } from "aws-cdk-lib/aws-ec2";
 
 
 export class S3StorageConstruct extends Construct {
     s3Bucket: Bucket
-    vpcS3Endpoint: GatewayVpcEndpoint
 
-    constructor(parent: Construct, vpc: Vpc) {
+    constructor(parent: Construct) {
         super(parent, 'S3Storage')
 
         this.s3Bucket = new Bucket(this, 'Bucket', {
@@ -26,10 +24,5 @@ export class S3StorageConstruct extends Construct {
             destinationBucket: this.s3Bucket,
             destinationKeyPrefix: 'ec2_code'
         });
-
-        this.vpcS3Endpoint = new GatewayVpcEndpoint(this, 'S3VpcEndpoint', {
-            vpc,
-            service: GatewayVpcEndpointAwsService.S3
-        })
     }
 }
