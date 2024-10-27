@@ -5,8 +5,10 @@ import { GatewayVpcEndpoint, GatewayVpcEndpointAwsService, IpAddresses, SubnetTy
 import { ServerMasterLambdaConstruct } from "./constructs/server-master-lambda-construct/server-master-lambda-construct"
 import { DNSConstruct } from "./constructs/dns-construct/dns-construct"
 import { S3StorageConstruct } from "./constructs/s3-storage-construct/s3-storage-construct"
+import { EC2ProvisioningConstruct } from "./constructs/ec2-provisioning-construct/ec2-provisioning-construct"
+import { config } from "./stack-config"
 
-const app = new App()
+const app = new App();
 export const gameServerStack = new Stack(app, 'GameServerStack', {
     description: 'Gameserver hosting on AWS.'
 });
@@ -30,6 +32,8 @@ new GatewayVpcEndpoint(gameServerStack, 'S3VpcEndpoint', {
 });
 
 new S3StorageConstruct(gameServerStack);
-new ServerMasterLambdaConstruct(gameServerStack, vpc);
-new DNSConstruct(gameServerStack);
-
+const serverMasterLambdaConstruct = new ServerMasterLambdaConstruct(gameServerStack, vpc);
+new EC2ProvisioningConstruct(gameServerStack, vpc, serverMasterLambdaConstruct.securityGroup)
+if (!config.DISABLE_DNS_MAPPING) {
+    new DNSConstruct(gameServerStack);
+}

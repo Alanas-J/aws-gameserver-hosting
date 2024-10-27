@@ -1,10 +1,17 @@
 import { RemovalPolicy } from "aws-cdk-lib";
 
+// The CDK does not allow Prefex List referencing by name, so an ID needs to manually be added.
+enum IPPrefexLists {
+    eu_west1_ec2_instance_conntect_ipv4 = 'pl-0839cc4c195a4e751'
+}
+
 export const config = {
     // =========================  DNS Config  ==========================
-    // If you want this stack to utilise a domain you've configured in Route 53 for vanity URLs.
+    // If you want this stack to utilise a domain you've configured in Route 53 for vanity URLs the following is needed:
     ROUTE53_ZONE_ID: '',
     DOMAIN_NAME: 'alanas-j.site',
+    // Disable to use the stack without Route 53.
+    DISABLE_DNS_MAPPING: false,
 
 
     // ========================= S3 Bucket Config ======================
@@ -15,9 +22,10 @@ export const config = {
 
     // ===================== EC2 Instance Config =======================
     // Static IPs cost $0.005 per hour.
-    // The only reason to not own an OP
+    // The only reason to keep static IPs is if not using a DNS mapping.
     REMOVE_STATIC_IP_ON_IDLE: true,
-
+    // Needs to be configured to your specific region to allow SSH connection.
+    REGIONAL_EC2_INSTANCE_CONNECT_PREFIX_LIST: IPPrefexLists.eu_west1_ec2_instance_conntect_ipv4,
 
     // ======================= Optional Extras =========================
     extras: {
@@ -40,7 +48,7 @@ export const serverInstances: GameserverConfig[] = [
         name: 'minecraft',
         startOnNextBoot: 'minecraft',
         instanceType: 't4g.micro', // $0.0084 per hour / $0.20 per day, safe to test with.
-        ssdStorageCapacityGB: 5 // $0.40 per month
+        ssdStorageCapacityGiB: 5 // $0.44 per month
     }
 ]
 
@@ -56,5 +64,5 @@ interface GameserverConfig {
     // What type of instance to use.
     instanceType: string
     // Storage
-    ssdStorageCapacityGB: number
+    ssdStorageCapacityGiB: number
 }

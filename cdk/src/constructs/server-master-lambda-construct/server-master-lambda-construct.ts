@@ -1,5 +1,5 @@
 import { CfnOutput, Duration } from "aws-cdk-lib";
-import { Peer, SecurityGroup, Vpc } from "aws-cdk-lib/aws-ec2";
+import { SecurityGroup, Vpc } from "aws-cdk-lib/aws-ec2";
 import { FunctionUrl, FunctionUrlAuthType, InvokeMode, Runtime } from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
@@ -31,7 +31,12 @@ export class ServerMasterLambdaConstruct extends Construct {
             vpc,
             securityGroups: [this.securityGroup],
             allowPublicSubnet: true,
-            allowAllOutbound: false,
+            // @TODO: Remove when not relevant; Temp bugfix for CDK issue 30717; esbuild has new defaults that break deploys.
+            bundling: {
+                esbuildArgs: {
+                    "--packages": "bundle",
+                },
+            },
             // reservedConcurrentExecutions: 1 // @TODO: disabled since my account is at 10 concurrency so I can't reserve/limit this lambda 
         })
 
