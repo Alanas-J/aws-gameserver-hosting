@@ -1,39 +1,25 @@
 #!/usr/bin/env node
 import { Stack } from "aws-cdk-lib"
 import { App } from "aws-cdk-lib"
-import { GatewayVpcEndpoint, GatewayVpcEndpointAwsService, IpAddresses, SubnetType, Vpc } from "aws-cdk-lib/aws-ec2"
 import { ServerMasterLambdaConstruct } from "./constructs/server-master-lambda-construct/server-master-lambda-construct"
 import { DNSConstruct } from "./constructs/dns-construct/dns-construct"
 import { S3StorageConstruct } from "./constructs/s3-storage-construct/s3-storage-construct"
 import { EC2ProvisioningConstruct } from "./constructs/ec2-provisioning-construct/ec2-provisioning-construct"
 import { config } from "./stack-config"
+import { VpcConstruct } from "./constructs/vpc-construct/vpc-construct"
 
 const app = new App();
-export const gameServerStack = new Stack(app, 'GameServerStack', {
+export const stack = new Stack(app, 'GameServerStack', {
     description: 'Gameserver hosting on AWS.'
 });
 
-const vpc = new Vpc(gameServerStack, 'VPC', {
-    vpcName: 'GameServerVPC',
-    ipAddresses: IpAddresses.cidr('10.0.255.0/24'), // Arbitrary choice, can be expanded for space for a fleet of instances.
-    subnetConfiguration: [
-        {
-            name: 'GameServerPublicSubnet',
-            cidrMask: 28, // 16 hosts
-            subnetType: SubnetType.PUBLIC,
-        }
-    ],
-    maxAzs: 1,
-    natGateways: 0
-});
-new GatewayVpcEndpoint(gameServerStack, 'S3VpcEndpoint', {
-    vpc,
-    service: GatewayVpcEndpointAwsService.S3
-});
+const vpcConstruct = new VpcConstruct(stack)
+new S3StorageConstruct(stack);
 
-new S3StorageConstruct(gameServerStack);
-const serverMasterLambdaConstruct = new ServerMasterLambdaConstruct(gameServerStack, vpc);
-new EC2ProvisioningConstruct(gameServerStack, vpc, serverMasterLambdaConstruct.securityGroup)
+const serverMasterLambdaConstruct = new ServerMasterLambdaConstruct(stack, vpcConstruct.vpc);
+
+new EC2ProvisioningConstruct(stack, vpcConstruct.vpc, serverMasterLambdaConstruct.securityGroup)
+
 if (!config.DISABLE_DNS_MAPPING) {
-    new DNSConstruct(gameServerStack);
+    new DNSConstruct(stack);
 }
