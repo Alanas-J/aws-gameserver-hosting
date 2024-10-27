@@ -1,4 +1,4 @@
-import { CfnOutput, Duration } from "aws-cdk-lib";
+import { CfnOutput, Duration, Stack } from "aws-cdk-lib";
 import { SecurityGroup, Vpc } from "aws-cdk-lib/aws-ec2";
 import { ManagedPolicy, PolicyStatement, Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
 import { FunctionUrl, FunctionUrlAuthType, InvokeMode, Runtime } from "aws-cdk-lib/aws-lambda";
@@ -28,10 +28,10 @@ export class ServerMasterLambdaConstruct extends Construct {
         this.lambdaRole = new Role(this, 'LambdaRole', {
             assumedBy: new ServicePrincipal('lambda.amazonaws.com'),
             managedPolicies: [
-                ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole')
+                ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'),
+                ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaVPCAccessExecutionRole')
             ],
         });
-        /*
         // @TODO: Temporary powers while developing ec2 logic.
         this.lambdaRole.addToPolicy(new PolicyStatement({
             actions: [
@@ -42,11 +42,10 @@ export class ServerMasterLambdaConstruct extends Construct {
             resources: ['*'],
             conditions: {
                 'StringEquals': {
-                    'aws:ResourceTag/YourTagKey': 'YourTagValue',
+                    'aws:ResourceTag/aws:cloudformation:stack-id': Stack.of(this).stackId,
                 }
             }
         }));
-        */
 
         this.lambdaFunction = new NodejsFunction(this, 'Lambda', {
             entry: path.resolve(__dirname, '../../lambda_code/gameserver-master-lambda/index.ts'),
