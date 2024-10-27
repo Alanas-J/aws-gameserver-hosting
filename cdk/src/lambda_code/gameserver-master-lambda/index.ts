@@ -1,10 +1,31 @@
+// Not bothered to prop drill for now.
+let currentEvent;
 
-exports.handler = async (event: any) => {    
+interface LambdaFunctionUrlEvent { // A map of all used variables, a dedicated type doesn't exist.
+    requestContext: {
+        http: {
+            method: string, // GET, POST etc.
+            path: string
+        }
+        headers: { [key: string]: string }
+        queryStringParameters?: { [key: string]: string | null } | null;
+        body: string | null;
+    }
+}
+
+export async function handler (event: LambdaFunctionUrlEvent) {
+    currentEvent = event
     console.log(event)
-    // event.requestContent.http.path  event.requestContent.http.method  will be useful
-    // event.queryStringParameters contains an object of query params.
-    // event.headers is an object of all headers.
-    
+
+    switch (event.requestContext.http.path.split('/')[1]) {
+        case 'status':
+            return {
+                statusCode: 200,
+                headers: { "Content-Type": "text/json" },
+                body: JSON.stringify({ message: "Status path" }),
+            };
+    }
+
     return {
         statusCode: 200,
         headers: { "Content-Type": "text/json" },
