@@ -47,8 +47,8 @@ export const serverInstances: GameserverConfig[] = [
     {
         name: 'minecraft',
         startOnNextBoot: 'minecraft',
-        instanceType: 't4g.micro', // $0.0084 per hour / $0.20 per day, safe to test with.
-        ssdStorageCapacityGiB: 5 // $0.44 per month
+        instanceType: 't3a.micro', // $0.0094 per hour / $0.2256 per day, safe to test with.
+        ssdStorageCapacityGiB: 10 // $0.88 per month; 8GB expected just for the EC2 Amazon Linux snapshot.
     }
 ]
 
