@@ -1,7 +1,7 @@
-import { Stack, Tags } from "aws-cdk-lib";
-import { BlockDeviceVolume, EbsDeviceVolumeType, Instance, InstanceType, MachineImage, Peer, Port, PrefixList, SecurityGroup, SubnetType, Vpc } from "aws-cdk-lib/aws-ec2";
+import { Tags } from "aws-cdk-lib";
+import { BlockDeviceVolume, EbsDeviceVolumeType, Instance, InstanceType, MachineImage, Peer, Port, SecurityGroup, SubnetType, Vpc } from "aws-cdk-lib/aws-ec2";
 import { Construct } from "constructs";
-import { serverInstances } from "../../stack-config";
+import { config, serverInstances } from "../../stack-config";
 
 
 export class EC2ProvisioningConstruct extends Construct {
@@ -55,6 +55,7 @@ export class EC2ProvisioningConstruct extends Construct {
             // @TODO: Need to figure out if I'll use parameter store or just tags.
             Tags.of(instance).add('Server Name', serverName);
             Tags.of(instance).add('Hosting', instanceConfig.startOnNextBoot)
+            Tags.of(instance).add('Remove Public IP on Shutdown', `${config.REMOVE_STATIC_IP_ON_IDLE}`)
 
             return instance
         });

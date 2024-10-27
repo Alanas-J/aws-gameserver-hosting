@@ -17,7 +17,9 @@ export class ServerMasterLambdaConstruct extends Construct {
 
         this.securityGroup = new SecurityGroup(this, 'SecurityGroup', {
             vpc,
-            allowAllOutbound: false, // Lambda in a public subnet can't reach the internet anyway.
+            // Lambda in a public subnet can't reach the internet anyway. 
+            // Internal ingress of all security groups follows principle of least privilege
+            allowAllOutbound: true,
             description: 'Server Master Lambda Security Group',
         });
 
