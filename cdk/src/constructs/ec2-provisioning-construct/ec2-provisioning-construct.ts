@@ -34,10 +34,10 @@ export class EC2ProvisioningConstruct extends Construct {
         gameserverSecurityGroup.addIngressRule(Peer.anyIpv6(), Port.udp(34197), 'Allow all ipv6/udp to connect to Factorio.');
 
 
-        this.gameservers = serverInstances.map((instanceConfig, index) => {
-            const serverName = instanceConfig.name ?? `gameserver${index}`;
+        this.gameservers = serverInstances.map((instanceConfig) => {
+            const serverName = instanceConfig.name ?? instanceConfig.id;
 
-            const instance = new Instance(this, serverName+'Instance', {
+            const instance = new Instance(this, instanceConfig.id, {
                 vpc,
                 vpcSubnets: { subnetType: SubnetType.PUBLIC },
                 machineImage: MachineImage.latestAmazonLinux2023(),
@@ -53,11 +53,10 @@ export class EC2ProvisioningConstruct extends Construct {
             });
 
             // @TODO: Need to figure out if I'll use parameter store or just tags.
-            Tags.of(instance).add('Server Name', serverName);
-            Tags.of(instance).add('Hosting', instanceConfig.startOnNextBoot)
-            Tags.of(instance).add('Remove Public IP on Shutdown', `${config.REMOVE_STATIC_IP_ON_IDLE}`)
-
-            return instance
+            Tags.of(instance).add('Server/Subdomain Name', serverName);
+            Tags.of(instance).add('Game Hosted', instanceConfig.startOnNextBoot);
+            Tags.of(instance).add('Remove Public IP on Shutdown', `${config.REMOVE_STATIC_IP_ON_IDLE}`);
+            return instance;
         });
     }
 }
