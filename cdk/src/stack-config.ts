@@ -1,9 +1,6 @@
 import { RemovalPolicy } from "aws-cdk-lib";
+import { GameserverConfig, IPPrefixLists } from "./stack-config-types";
 
-// The CDK does not allow Prefex List referencing by name, so an ID needs to manually be added.
-enum IPPrefexLists {
-    eu_west1_ec2_instance_conntect_ipv4 = 'pl-0839cc4c195a4e751'
-}
 
 export const config = {
     // =========================  DNS Config  ==========================
@@ -25,7 +22,7 @@ export const config = {
     // The only reason to keep static IPs is if not using a DNS mapping.
     REMOVE_STATIC_IP_ON_IDLE: true,
     // Needs to be configured to your specific region to allow SSH connection.
-    REGIONAL_EC2_INSTANCE_CONNECT_PREFIX_LIST: IPPrefexLists.eu_west1_ec2_instance_conntect_ipv4,
+    REGIONAL_EC2_INSTANCE_CONNECT_PREFIX_LIST: IPPrefixLists.eu_west1_ec2_instance_conntect_ipv4,
 
     // ======================= Optional Extras =========================
     extras: {
@@ -42,27 +39,12 @@ export const config = {
     }
 }
 
-
 export const serverInstances: GameserverConfig[] = [
     {
+        id: 'gameserver_1',
         name: 'minecraft',
         startOnNextBoot: 'minecraft',
         instanceType: 't3a.micro', // $0.0094 per hour / $0.2256 per day, safe to test with.
         ssdStorageCapacityGiB: 10 // $0.88 per month; 8GB expected just for the EC2 Amazon Linux snapshot.
     }
 ]
-
-
-interface GameserverConfig {
-    // Used to identify the specific instance + becomes the subdomain name.
-    // WARNING: name changes will recreate the instance deleting files.
-    name: string 
-    // Game hosted on the instance, deploying a new game string + restarting the instance will swap servers.
-    startOnNextBoot: 'minecraft' | 'factorio'
-    // On first load of a specific server will pull server files from S3, instead of a fresh install.
-    initFromS3?: string
-    // What type of instance to use.
-    instanceType: string
-    // Storage
-    ssdStorageCapacityGiB: number
-}
