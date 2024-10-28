@@ -40,11 +40,13 @@ export class ServerMasterLambdaConstruct extends Construct {
                 'ec2:StopInstances',
             ],
             resources: ['*'],
+            /*
             conditions: {
                 'StringEquals': {
                     'aws:ResourceTag/aws:cloudformation:stack-id': Stack.of(this).stackId,
                 }
             }
+            */
         }));
 
         this.lambdaFunction = new NodejsFunction(this, 'Lambda', {
