@@ -16,9 +16,9 @@ export const stack = new Stack(app, 'GameServerStack', {
 const vpcConstruct = new VpcConstruct(stack)
 new S3StorageConstruct(stack);
 
-const serverMasterLambdaConstruct = new ServerMasterLambdaConstruct(stack, vpcConstruct.vpc);
+new ServerMasterLambdaConstruct(stack, vpcConstruct.vpc);
 
-new EC2ProvisioningConstruct(stack, vpcConstruct.vpc, serverMasterLambdaConstruct.securityGroup)
+new EC2ProvisioningConstruct(stack, vpcConstruct.vpc /* serverMasterLambdaConstruct.securityGroup */)
 
 if (!config.DISABLE_DNS_MAPPING) {
     new DNSConstruct(stack);

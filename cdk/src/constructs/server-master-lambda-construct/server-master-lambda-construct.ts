@@ -1,5 +1,5 @@
 import { CfnOutput, Duration, Stack } from "aws-cdk-lib";
-import { SecurityGroup, Vpc } from "aws-cdk-lib/aws-ec2";
+import { SecurityGroup, SubnetType, Vpc } from "aws-cdk-lib/aws-ec2";
 import { ManagedPolicy, PolicyStatement, Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
 import { FunctionUrl, FunctionUrlAuthType, InvokeMode, Runtime } from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
@@ -11,12 +11,13 @@ import path = require("path");
 export class ServerMasterLambdaConstruct extends Construct {
     lambdaFunction: NodejsFunction
     functionUrl: FunctionUrl
-    securityGroup: SecurityGroup
+    // securityGroup: SecurityGroup
     lambdaRole: Role
 
     constructor(parent: Construct, vpc: Vpc) {
         super(parent, 'ServerMasterLambdaConstruct')
 
+        /*
         this.securityGroup = new SecurityGroup(this, 'SecurityGroup', {
             vpc,
             // Lambda in a public subnet can't reach the internet anyway. 
@@ -24,12 +25,11 @@ export class ServerMasterLambdaConstruct extends Construct {
             allowAllOutbound: true,
             description: 'Server Master Lambda Security Group',
         });
-
+        */
         this.lambdaRole = new Role(this, 'LambdaRole', {
             assumedBy: new ServicePrincipal('lambda.amazonaws.com'),
             managedPolicies: [
-                ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole'),
-                ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaVPCAccessExecutionRole')
+                ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole')
             ],
         });
         // @TODO: Temporary powers while developing ec2 logic.
@@ -52,11 +52,12 @@ export class ServerMasterLambdaConstruct extends Construct {
             functionName: 'gameserver-master-lambda',
             handler: 'handler',
             runtime: Runtime.NODEJS_20_X,
-            timeout: Duration.seconds(30),
+            timeout: Duration.seconds(60),
             logRetention: RetentionDays.ONE_WEEK,
-            vpc,
-            securityGroups: [this.securityGroup],
-            allowPublicSubnet: true,
+            // vpc,
+            memorySize: 256,
+            // securityGroups: [this.securityGroup],
+            // allowPublicSubnet: true,
             // @TODO: Remove when not relevant; Temp bugfix for CDK issue 30717; esbuild has new defaults that break deploys.
             bundling: {
                 esbuildArgs: {

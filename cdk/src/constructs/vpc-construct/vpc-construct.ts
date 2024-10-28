@@ -17,6 +17,11 @@ export class VpcConstruct extends Construct {
                     name: 'GameServerPublicSubnet',
                     cidrMask: 28, // 16 hosts
                     subnetType: SubnetType.PUBLIC,
+                },
+                {
+                    name: 'GameServerPrivateSubnet',
+                    cidrMask: 28, // 16 hosts
+                    subnetType: SubnetType.PRIVATE_ISOLATED,
                 }
             ],
             maxAzs: 1,
