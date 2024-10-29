@@ -52,9 +52,8 @@ export class EC2ProvisioningConstruct extends Construct {
             });
 
             // @TODO: Need to figure out if I'll use parameter store or just tags.
-            Tags.of(instance).add('Server/Subdomain Name', serverName);
+            Tags.of(instance).add('Server Name', serverName);
             Tags.of(instance).add('Game Hosted', instanceConfig.startOnNextBoot);
-            Tags.of(instance).add('Remove Public IP on Shutdown', `${config.REMOVE_STATIC_IP_ON_IDLE}`);
             return instance;
         });
     }

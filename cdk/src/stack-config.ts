@@ -18,10 +18,7 @@ export const config = {
 
 
     // ===================== EC2 Instance Config =======================
-    // Static IPs cost $0.005 per hour.
-    // The only reason to keep static IPs is if not using a DNS mapping.
-    REMOVE_STATIC_IP_ON_IDLE: true,
-    // Needs to be configured to your specific region to allow SSH connection.
+    // Needs to be configured to your specific region to allow EC2 Instance Connect SSH connection.
     REGIONAL_EC2_INSTANCE_CONNECT_PREFIX_LIST: IPPrefixLists.eu_west1_ec2_instance_conntect_ipv4,
 
     // ======================= Optional Extras =========================

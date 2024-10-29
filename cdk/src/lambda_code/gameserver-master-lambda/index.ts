@@ -6,19 +6,19 @@ const ec2Client = new EC2Client();
 export async function handler (event: LambdaFunctionUrlEvent) {
     console.log(event)
 
-    switch (event.requestContext.http.path.split('/')[1]) {
-        case 'instance_status':
-            console.log('fetching instance info')
-
-            const instanceDetails = await fetchStackInstanceDetails()
-            return httpResponse({ instanceDetails });
+    try {
+        switch (event.requestContext.http.path.split('/')[1]) {
+            case 'instance_status':
+                console.log('fetching instance info')
+    
+                const instanceDetails = await fetchStackInstanceDetails()
+                return httpResponse({ instanceDetails });
+        }
+        return httpResponse({ message: 'Invalid path.' }, 400);
+    } catch (error) {
+        console.error(error)
+        return httpResponse({ message: 'Unexpected internal error.' }, 500);
     }
-
-    return {
-        statusCode: 200,
-        headers: { "Content-Type": "text/json" },
-        body: JSON.stringify({ message: "Hello world!" }),
-    };
 };
 
 interface LambdaFunctionUrlEvent { // A map of all used variables, a dedicated type doesn't exist.
@@ -67,7 +67,8 @@ async function fetchStackInstanceDetails() {
             id: instanceData.InstanceId,
             state: instanceData.State,
             gameHosted: instanceData.Tags?.find(tag => tag.Key === 'Game Hosted')?.Value,
-            dnsName: instanceData.Tags?.find(tag => tag.Key === 'Server/Subdomain Name')?.Value,
+            serverName: instanceData.Tags?.find(tag => tag.Key === 'Server Name')?.Value,
+            url: instanceData.Tags?.find(tag => tag.Key === 'Server Url')?.Value,
             publicIp: instanceData.PublicIpAddress,
             instanceType: instanceData.InstanceType,
             launchTime: instanceData.LaunchTime
