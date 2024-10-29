@@ -1,5 +1,5 @@
 import { CfnOutput, Duration, Stack } from "aws-cdk-lib";
-import { SecurityGroup, SubnetType, Vpc } from "aws-cdk-lib/aws-ec2";
+import { Vpc } from "aws-cdk-lib/aws-ec2";
 import { ManagedPolicy, PolicyStatement, Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
 import { FunctionUrl, FunctionUrlAuthType, InvokeMode, Runtime } from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
@@ -13,7 +13,7 @@ export class ServerMasterLambdaConstruct extends Construct {
     functionUrl: FunctionUrl
     lambdaRole: Role
 
-    constructor(parent: Construct, vpc: Vpc) {
+    constructor(parent: Construct) {
         super(parent, 'ServerMasterLambdaConstruct')
 
         this.lambdaRole = new Role(this, 'LambdaRole', {
@@ -22,7 +22,6 @@ export class ServerMasterLambdaConstruct extends Construct {
                 ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole')
             ],
         });
-        // @TODO: Temporary powers while developing ec2 logic.
         this.lambdaRole.addToPolicy(new PolicyStatement({
             actions: [
                 'ec2:DescribeInstances',

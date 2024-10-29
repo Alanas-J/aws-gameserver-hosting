@@ -1,18 +1,22 @@
-import { EC2Client, DescribeInstancesCommand } from "@aws-sdk/client-ec2";
+import { EC2Client, DescribeInstancesCommand, StopInstancesCommand, StartInstancesCommand } from "@aws-sdk/client-ec2";
+import { httpResponse, LambdaFunctionUrlEvent } from './utils'
 
 const ec2Client = new EC2Client();
 
 
 export async function handler (event: LambdaFunctionUrlEvent) {
-    console.log(event)
-
+    const path = event.requestContext.http.path.split('/')
     try {
-        switch (event.requestContext.http.path.split('/')[1]) {
-            case 'instance_status':
-                console.log('fetching instance info')
-    
+        switch (path[1]) {
+            case 'instances':
                 const instanceDetails = await fetchStackInstanceDetails()
                 return httpResponse({ instanceDetails });
+            
+            case 'instance': 
+                if (['start', 'stop'].includes(path[3])) {
+                    // return instanceAction(path[2], path[3] as any) //@TODO: disabled for now, will need to configure auth to prevent abuse.
+                }
+                break;
         }
         return httpResponse({ message: 'Invalid path.' }, 400);
     } catch (error) {
@@ -20,27 +24,6 @@ export async function handler (event: LambdaFunctionUrlEvent) {
         return httpResponse({ message: 'Unexpected internal error.' }, 500);
     }
 };
-
-interface LambdaFunctionUrlEvent { // A map of all used variables, a dedicated type doesn't exist.
-    requestContext: {
-        http: {
-            method: string, // GET, POST etc.
-            path: string
-        }
-        headers: { [key: string]: string }
-        queryStringParameters?: { [key: string]: string | null } | null;
-        body: string | null;
-    }
-}
-
-async function httpResponse (body: any, statusCode=200, headers={ "Content-Type": "text/json" }) {
-    return {
-        statusCode,
-        headers,
-        body
-    };
-}
-
 
 async function fetchStackInstanceDetails() {
     const stackInstances = []
@@ -75,4 +58,44 @@ async function fetchStackInstanceDetails() {
         }
     })
     return instanceDetails
+}
+
+
+async function instanceAction(serverName: string, action: 'start' | 'stop') {
+    const fetchInstanceCommand = new DescribeInstancesCommand({
+        Filters: [
+            {
+                Name: 'tag:aws:cloudformation:stack-name',
+                Values: ['GameServerStack']
+            },
+            {
+                Name: 'tag:Server Name',
+                Values: [serverName]
+            }
+        ]
+    });
+
+    const data = await ec2Client.send(fetchInstanceCommand)
+    const instance = data?.Reservations && data.Reservations[0].Instances
+    if (!instance || !instance[0].InstanceId) {
+        return httpResponse({ message: 'Targeted instance not found' }, 404)
+    }
+
+    const commandArgs = {
+        "InstanceIds": [
+            instance[0].InstanceId
+        ]
+    };
+
+    let response;
+    if (action === 'start') {
+        const command = new StartInstancesCommand(commandArgs);
+        response = (await ec2Client.send(command)).StartingInstances
+    } else if (action === 'stop') {
+        const command = new StopInstancesCommand(commandArgs);
+        response = (await ec2Client.send(command)).StoppingInstances
+    } else {
+        return httpResponse({ message: 'Invalid action.' }, 400)
+    }
+    return httpResponse({ message: 'Success', response })
 }
