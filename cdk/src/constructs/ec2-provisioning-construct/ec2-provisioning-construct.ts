@@ -7,7 +7,7 @@ import { config, serverInstances } from "../../stack-config";
 export class EC2ProvisioningConstruct extends Construct {
     gameservers: Instance[]
 
-    constructor(parent: Construct, vpc: Vpc, servermasterLambdaSG: SecurityGroup) {
+    constructor(parent: Construct, vpc: Vpc) {
         super(parent, 'EC2Provision');
 
         const gameserverSecurityGroup = new SecurityGroup(this, 'SecurityGroup', {
@@ -20,8 +20,7 @@ export class EC2ProvisioningConstruct extends Construct {
         gameserverSecurityGroup.addIngressRule(Peer.prefixList('pl-0839cc4c195a4e751'), Port.tcp(22), 'Allow SSH access via EC2 Instance Connect.');
 
         // Lambda @TODO: may need to change, might not use port 80 for node, yet to see. (might not want to give Node privelege enough to use port 80, but no idea how much power the 'ec2-user' has.)
-        gameserverSecurityGroup.addIngressRule(Peer.securityGroupId(servermasterLambdaSG.securityGroupId), Port.tcp(80), 'Allow the servermaster lambda to access the HTTP port.');
-        // servermasterLambdaSG.addEgressRule(Peer.securityGroupId(gameserverSecurityGroup.securityGroupId), Port.tcp(80), 'Allow the servermaster lambda use the HTTP port to reach gameservers.')
+        // gameserverSecurityGroup.addIngressRule(Peer.securityGroupId(servermasterLambdaSG.securityGroupId), Port.tcp(80), 'Allow the servermaster lambda to access the HTTP port.');
 
         // Minecraft Port
         gameserverSecurityGroup.addIngressRule(Peer.anyIpv4(), Port.tcp(25565), 'Allow all ipv4/tcp to connect to Minecraft.');
@@ -53,9 +52,8 @@ export class EC2ProvisioningConstruct extends Construct {
             });
 
             // @TODO: Need to figure out if I'll use parameter store or just tags.
-            Tags.of(instance).add('Server/Subdomain Name', serverName);
+            Tags.of(instance).add('Server Name', serverName);
             Tags.of(instance).add('Game Hosted', instanceConfig.startOnNextBoot);
-            Tags.of(instance).add('Remove Public IP on Shutdown', `${config.REMOVE_STATIC_IP_ON_IDLE}`);
             return instance;
         });
     }

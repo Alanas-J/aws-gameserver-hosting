@@ -1,5 +1,6 @@
-import { CfnOutput, Duration } from "aws-cdk-lib";
-import { SecurityGroup, Vpc } from "aws-cdk-lib/aws-ec2";
+import { CfnOutput, Duration, Stack } from "aws-cdk-lib";
+import { Vpc } from "aws-cdk-lib/aws-ec2";
+import { ManagedPolicy, PolicyStatement, Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
 import { FunctionUrl, FunctionUrlAuthType, InvokeMode, Runtime } from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
@@ -10,35 +11,51 @@ import path = require("path");
 export class ServerMasterLambdaConstruct extends Construct {
     lambdaFunction: NodejsFunction
     functionUrl: FunctionUrl
-    securityGroup: SecurityGroup
+    lambdaRole: Role
 
-    constructor(parent: Construct, vpc: Vpc) {
+    constructor(parent: Construct) {
         super(parent, 'ServerMasterLambdaConstruct')
 
-        this.securityGroup = new SecurityGroup(this, 'SecurityGroup', {
-            vpc,
-            // Lambda in a public subnet can't reach the internet anyway. 
-            // Internal ingress of all security groups follows principle of least privilege
-            allowAllOutbound: true,
-            description: 'Server Master Lambda Security Group',
+        this.lambdaRole = new Role(this, 'LambdaRole', {
+            assumedBy: new ServicePrincipal('lambda.amazonaws.com'),
+            managedPolicies: [
+                ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole')
+            ],
         });
+        this.lambdaRole.addToPolicy(new PolicyStatement({
+            actions: [
+                'ec2:DescribeInstances',
+            ],
+            resources: ['*']
+        }));
+        this.lambdaRole.addToPolicy(new PolicyStatement({
+            actions: [
+                'ec2:StartInstances',
+                'ec2:StopInstances',
+            ],
+            resources: ['*'],
+            conditions: {
+                'StringEquals': {
+                    'aws:ResourceTag/aws:cloudformation:stack-id': Stack.of(this).stackId,
+                }
+            }
+        }));
 
         this.lambdaFunction = new NodejsFunction(this, 'Lambda', {
             entry: path.resolve(__dirname, '../../lambda_code/gameserver-master-lambda/index.ts'),
             functionName: 'gameserver-master-lambda',
             handler: 'handler',
             runtime: Runtime.NODEJS_20_X,
-            timeout: Duration.seconds(30),
+            timeout: Duration.seconds(60),
             logRetention: RetentionDays.ONE_WEEK,
-            vpc,
-            securityGroups: [this.securityGroup],
-            allowPublicSubnet: true,
+            memorySize: 256,
             // @TODO: Remove when not relevant; Temp bugfix for CDK issue 30717; esbuild has new defaults that break deploys.
             bundling: {
                 esbuildArgs: {
                     "--packages": "bundle",
                 },
             },
+            role: this.lambdaRole
             // reservedConcurrentExecutions: 1 // @TODO: disabled since my account is at 10 concurrency so I can't reserve/limit this lambda 
         })
 
@@ -47,7 +64,6 @@ export class ServerMasterLambdaConstruct extends Construct {
             invokeMode: InvokeMode.BUFFERED,
             // CORS rules can be implemented here
         })
-
         new CfnOutput(this, 'FunctionUrl', { value: this.functionUrl.url })   
     }
 }
