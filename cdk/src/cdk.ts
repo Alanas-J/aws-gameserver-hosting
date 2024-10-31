@@ -14,11 +14,11 @@ export const stack = new Stack(app, 'GameServerStack', {
 });
 
 const vpcConstruct = new VpcConstruct(stack)
-new S3StorageConstruct(stack);
+const s3Construct = new S3StorageConstruct(stack);
 
 new ServerMasterLambdaConstruct(stack);
 
-new EC2ProvisioningConstruct(stack, vpcConstruct.vpc)
+new EC2ProvisioningConstruct(stack, vpcConstruct.vpc, s3Construct)
 
 if (!config.DISABLE_DNS_MAPPING) {
     new DNSConstruct(stack);
