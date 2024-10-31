@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "ES2016",                // or ES6, depending on your needs
+    "module": "CommonJS",
+    "outDir": "./dist",                // Output directory for compiled files
+    "rootDir": "./src",                // Input directory for source files
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["src/**/*"],              // Include all .ts files in the src directory
+  "exclude": ["node_modules", "dist"]   // Exclude node_modules and dist from compilation
+}

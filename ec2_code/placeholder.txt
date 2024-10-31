@@ -1,1 +1,0 @@
-I haven't prepared the EC2 server boilerplate so this will have to do for now.

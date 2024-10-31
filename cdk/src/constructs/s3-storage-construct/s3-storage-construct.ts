@@ -19,10 +19,16 @@ export class S3StorageConstruct extends Construct {
             accessControl: BucketAccessControl.BUCKET_OWNER_FULL_CONTROL
         });
         
-        new BucketDeployment(this, 'BucketDeploy', {
-            sources: [Source.asset('../ec2_code')], // @TODO: Configure path to build output.
+        new BucketDeployment(this, 'BucketServerCodeDeploy', {
+            sources: [Source.asset('../ec2_code/dist')],
             destinationBucket: this.s3Bucket,
-            destinationKeyPrefix: 'ec2_code'
+            destinationKeyPrefix: 'ec2_code/node_server'
         });
+        new BucketDeployment(this, 'BucketServerScriptsDeploy', {
+            sources: [Source.asset('../ec2_code/scripts')],
+            destinationBucket: this.s3Bucket,
+            destinationKeyPrefix: 'ec2_code/scripts'
+        });
+
     }
 }
