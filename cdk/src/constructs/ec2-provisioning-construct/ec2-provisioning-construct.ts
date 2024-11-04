@@ -89,7 +89,8 @@ export class EC2ProvisioningConstruct extends Construct {
                         deleteOnTermination: true,
                         volumeType: EbsDeviceVolumeType.GP3,
                     }),
-                }]
+                }],
+                role: this.gameserverRole
             });
 
             // @TODO: Need to figure out if I'll use parameter store or just tags.
