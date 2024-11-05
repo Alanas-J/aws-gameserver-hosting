@@ -15,11 +15,12 @@ chmod +x /opt/gameserver/*.sh
 echo 'Sync complete!'
 
 
-# Not configured yet
 echo '4: Adding startup script to crontab...'
 (crontab -l 2>/dev/null; echo "@reboot /opt/gameserver/scripts/boot_script.sh >> /var/log/boot_script.log 2>&1") | crontab -
 
-
-# Install CloudWatch Agent.
+echo '5: Installing and configuring Cloudwatch Agent (not implemented)...'
+# @TODO: Install CloudWatch Agent.
 
 # pm2 start will go here...
+echo '6: Starting Node server via PM2...'
+pm2 start /opt/gameserver/node_server --name gameserver-node-app
