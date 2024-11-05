@@ -1,9 +1,11 @@
-import { Stack, Tags } from "aws-cdk-lib";
-import { BlockDeviceVolume, EbsDeviceVolumeType, Instance, InstanceType, MachineImage, Peer, Port, SecurityGroup, SubnetType, Vpc } from "aws-cdk-lib/aws-ec2";
+import { Tags } from "aws-cdk-lib";
+import { BlockDeviceVolume, EbsDeviceVolumeType, Instance, InstanceType, MachineImage, Peer, Port, SecurityGroup, SubnetType, UserData, Vpc } from "aws-cdk-lib/aws-ec2";
 import { Construct } from "constructs";
 import { serverInstances } from "../../stack-config";
 import { PolicyStatement, Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
 import { S3StorageConstruct } from "../s3-storage-construct/s3-storage-construct";
+import path = require("path");
+import { readFileSync } from "fs";
 
 
 export class EC2ProvisioningConstruct extends Construct {
@@ -73,6 +75,13 @@ export class EC2ProvisioningConstruct extends Construct {
         }));
         */
 
+        // UserData script loading
+        const scriptPath = path.join(__dirname, '../../../../ec2_code/scripts/user_data.sh');
+        const scriptContent = readFileSync(scriptPath, 'utf8');
+        const userData = UserData.forLinux();
+        userData.addCommands(scriptContent);
+
+
         // Gameserver provisioning
         this.gameservers = serverInstances.map((instanceConfig) => {
             const serverName = instanceConfig.name ?? instanceConfig.id;
@@ -90,7 +99,8 @@ export class EC2ProvisioningConstruct extends Construct {
                         volumeType: EbsDeviceVolumeType.GP3,
                     }),
                 }],
-                role: this.gameserverRole
+                role: this.gameserverRole,
+                userData
             });
 
             // @TODO: Need to figure out if I'll use parameter store or just tags.
