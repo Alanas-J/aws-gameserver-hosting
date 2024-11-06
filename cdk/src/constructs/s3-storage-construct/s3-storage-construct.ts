@@ -20,15 +20,9 @@ export class S3StorageConstruct extends Construct {
         });
         
         new BucketDeployment(this, 'BucketServerCodeDeploy', {
-            sources: [Source.asset('../ec2_code/dist')],
+            sources: [Source.asset('../ec2_code')],
             destinationBucket: this.s3Bucket,
-            destinationKeyPrefix: 'ec2_code/node_server'
+            destinationKeyPrefix: 'ec2_code'
         });
-        new BucketDeployment(this, 'BucketServerScriptsDeploy', {
-            sources: [Source.asset('../ec2_code/scripts')],
-            destinationBucket: this.s3Bucket,
-            destinationKeyPrefix: 'ec2_code/scripts'
-        });
-
     }
 }

@@ -1,13 +1,13 @@
 #!/bin/bash
 
-echo '0: Updating DNF... ==================================================================================='
+echo '0: Updating DNF... ===================================================================================';
 sudo dnf update;
 
-echo '1: Installing Node... ================================================================================'
+echo '1: Installing Node... ================================================================================';
 sudo dnf install -y nodejs; # May want to replace later with a specified Node.js version if bugs occur.
 
 
-echo '2: Installing PM2... ================================================================================='
+echo '2: Installing PM2... =================================================================================';
 sudo npm install -g pm2@latest;
 
 
@@ -30,5 +30,7 @@ echo '5: Installing and configuring Cloudwatch Agent (not implemented)...';
 # @TODO: Install CloudWatch Agent.
 
 # pm2 start will go here...
-echo '6: Starting Node server via PM2... ===================================================================';
-pm2 start /opt/gameserver/node_server --name gameserver-node-app;
+echo '6: Installing, Building and Starting Node server... ==================================================';
+npm --prefix /opt/gameserver install;
+npm --prefix /opt/gameserver run build;
+pm2 start /opt/gameserver/dist --name gameserver-node-app;
