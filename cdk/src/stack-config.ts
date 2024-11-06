@@ -38,7 +38,7 @@ export const config = {
 
 export const serverInstances: GameserverConfig[] = [
     {
-        id: 'gameserver_2',
+        id: 'gameserver_1',
         name: 'minecraft',
         startOnNextBoot: 'minecraft',
         instanceType: 't3a.micro', // $0.0094 per hour / $0.2256 per day, safe to test with.
