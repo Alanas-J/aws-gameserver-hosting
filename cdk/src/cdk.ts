@@ -18,7 +18,8 @@ const s3Construct = new S3StorageConstruct(stack);
 
 new ServerMasterLambdaConstruct(stack);
 
-new EC2ProvisioningConstruct(stack, vpcConstruct.vpc, s3Construct)
+const ec2ProvisioningConstruct = new EC2ProvisioningConstruct(stack, vpcConstruct.vpc, s3Construct);
+ec2ProvisioningConstruct.node.addDependency(s3Construct);
 
 if (!config.DISABLE_DNS_MAPPING) {
     new DNSConstruct(stack);
