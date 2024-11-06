@@ -3,7 +3,7 @@ import fastify from 'fastify'
 const server = fastify()
 
 server.get('/ping', async (request, reply) => {
-    return 'reboot test 1.\n'
+    return 'reboot test 2.\n'
 })
 
 server.listen({ port: 8080, host: '0.0.0.0' }, (err, address) => {

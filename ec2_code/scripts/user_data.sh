@@ -26,12 +26,13 @@ dnf install -y cronie
 systemctl start crond;
 systemctl enable crond;
 (sudo -u ec2-user crontab -l 2>/dev/null; echo "@reboot sudo sh -c "/opt/gameserver/scripts/boot_script.sh >> /var/log/boot_script.log 2>&1"") | sudo -u ec2-user crontab -;
-
+#
+#
 echo '5: Installing and configuring Cloudwatch Agent (not implemented)...';
 # @TODO: Install CloudWatch Agent.
 #
 #
 echo '6: Installing, Building and Starting Node server... ==================================================';
-npm --prefix /opt/gameserver install;
-npm --prefix /opt/gameserver run build;
+sudo -u ec2-user npm --prefix /opt/gameserver install;
+sudo -u ec2-user npm --prefix /opt/gameserver run build;
 sudo -u ec2-user pm2 start /opt/gameserver/dist --name gameserver-node-app;
