@@ -100,7 +100,8 @@ export class EC2ProvisioningConstruct extends Construct {
                     }),
                 }],
                 role: this.gameserverRole,
-                userData
+                userData,
+                userDataCausesReplacement: true // TODO: just for development..
             });
 
             // @TODO: Need to figure out if I'll use parameter store or just tags.
