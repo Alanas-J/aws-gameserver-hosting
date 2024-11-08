@@ -60,23 +60,21 @@ export class EC2ProvisioningConstruct extends Construct {
                 `arn:aws:s3:::${s3Construct.s3Bucket.bucketName}/server_backups/*`,
             ]
         }));
-        // Power to fix Route 53 records post boot.
-        /* @TODO: figure out Route53 record policy, this will require testing.
-        this.gameserverRole.addToPolicy(new PolicyStatement({
-            actions: [
-                'route53:ChangeResourceRecordSets',
-                'route53:ListResourceRecordSets',
-            ],
-            resources: ['arn:aws:route53:::hostedzone/YOUR_HOSTED_ZONE_ID'],
-            conditions: {
-                'StringEquals': {
-                    'route53:ChangeResourceRecordSets/<tagkey>': '<tag value>',
-                },
-            },
-        }));
-        */
 
-        // Currently the only way to enable metadata tags is via Cfn constructs.
+        if (stackConfig.ENABLE_ROUTE_53_MAPPING) {
+            // Power for the EC2 instance to create ARecords for itself.
+            // @TODO: I may move this to a dedicated lambda the EC2 instance has to ask in the future.
+            this.gameserverRole.addToPolicy(new PolicyStatement({
+                actions: [
+                    'route53:ChangeResourceRecordSets',
+                    "route53:GetChange",
+                    'route53:ListResourceRecordSets',
+                ],
+                resources: [`arn:aws:route53:::hostedzone/${ROUTE53_ZONE_ID}`],
+            }));
+        }
+
+        // Currently the only way to enable metadata tag access is via Cfn constructs in the CDK.
         const instanceProfile = new CfnInstanceProfile(this, 'InstanceProfile', {
             roles: [this.gameserverRole.roleName]
         });
@@ -121,10 +119,12 @@ export class EC2ProvisioningConstruct extends Construct {
             });
             // TODO: need to add a conditional if statement here..
             Tags.of(instance).add('Server Name', serverName);
-            Tags.of(instance).add('Domain Name', stackConfig.DOMAIN_NAME);
-            Tags.of(instance).add('Hosted Zone', ROUTE53_ZONE_ID);
             Tags.of(instance).add('Game Hosted', instanceConfig.startOnNextBoot);
             
+            if (stackConfig.ENABLE_ROUTE_53_MAPPING) {
+                Tags.of(instance).add('Domain Name', stackConfig.DOMAIN_NAME);
+                Tags.of(instance).add('Hosted Zone', ROUTE53_ZONE_ID);
+            }
             return instance;
             
         });
