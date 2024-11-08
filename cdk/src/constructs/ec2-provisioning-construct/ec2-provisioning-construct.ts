@@ -1,11 +1,12 @@
 import { Tags } from "aws-cdk-lib";
 import { CfnInstance, CfnLaunchTemplate, EbsDeviceVolumeType, MachineImage, Peer, Port, SecurityGroup, Vpc } from "aws-cdk-lib/aws-ec2";
 import { Construct } from "constructs";
-import { config, serverInstances } from "../../stack-config";
+import { stackConfig, serverInstances } from "../../stack-config";
 import { CfnInstanceProfile, PolicyStatement, Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
 import { S3StorageConstruct } from "../s3-storage-construct/s3-storage-construct";
 import path = require("path");
 import { readFileSync } from "fs";
+import { ROUTE53_ZONE_ID } from "../../personal_config";
 
 
 export class EC2ProvisioningConstruct extends Construct {
@@ -120,7 +121,8 @@ export class EC2ProvisioningConstruct extends Construct {
             });
             // TODO: need to add a conditional if statement here..
             Tags.of(instance).add('Server Name', serverName);
-            Tags.of(instance).add('Domain Name', config.DOMAIN_NAME);
+            Tags.of(instance).add('Domain Name', stackConfig.DOMAIN_NAME);
+            Tags.of(instance).add('Hosted Zone', ROUTE53_ZONE_ID);
             Tags.of(instance).add('Game Hosted', instanceConfig.startOnNextBoot);
             
             return instance;
