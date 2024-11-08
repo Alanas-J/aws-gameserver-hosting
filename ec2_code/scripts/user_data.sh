@@ -20,6 +20,9 @@ mkdir -p /opt/server_files
 chown ec2-user:ec2-user /opt/server_files
 mkdir -p /var/gameserver
 chown ec2-user:ec2-user /var/gameserver
+mkdir -p /var/gameserver/logs
+chown ec2-user:ec2-user /var/gameserver/logs
+
 
 echo '4: Initial S3 sync... ==============================================================================='
 # @TODO: May want to detect the S3 bucket instead of hardcoding
@@ -32,11 +35,15 @@ echo '5: Installing crontab and adding startup script to crontab... ============
 dnf install -y cronie
 systemctl start crond
 systemctl enable crond
-(sudo -u ec2-user crontab -l 2>/dev/null; echo "@reboot sudo sh -c '/opt/gameserver/scripts/boot_script.sh >> /var/gameserver/boot_script.log 2>&1'") | sudo -u ec2-user crontab -
+(sudo -u ec2-user crontab -l 2>/dev/null; echo "@reboot sudo sh -c '/opt/gameserver/scripts/boot_script.sh >> /var/gameserver/logs/boot_script.log 2>&1'") | sudo -u ec2-user crontab -
 
 
-echo '6: Installing and configuring Cloudwatch Agent (not implemented)...'
-# @TODO: Install CloudWatch Agent.
+echo '6: Installing and configuring Cloudwatch Agent... ===================================================='
+yum install -y amazon-cloudwatch-agent
+cp -f /opt/gameserver/cloudwatch-config.json /opt/aws/amazon-cloudwatch-agent/bin/config.json
+/opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a start
+systemctl enable amazon-cloudwatch-agent
+systemctl status amazon-cloudwatch-agent
 
 
 echo '7: Installing, Building and Starting Node server... =================================================='

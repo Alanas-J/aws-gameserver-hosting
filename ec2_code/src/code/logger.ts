@@ -1,12 +1,6 @@
-import { existsSync, mkdirSync } from "fs";
 import winston from "winston";
 
 const LOG_DIRECTORY = '/var/gameserver/logs'
-
-// Create log directory if it doesn't exist.
-if (!existsSync(LOG_DIRECTORY)) {
-    mkdirSync(LOG_DIRECTORY, { recursive: true });
-}
 
 
 const consoleTransport = new winston.transports.Console({ 

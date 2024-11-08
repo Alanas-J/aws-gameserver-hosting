@@ -60,6 +60,18 @@ export class EC2ProvisioningConstruct extends Construct {
                 `arn:aws:s3:::${s3Construct.s3Bucket.bucketName}/server_backups/*`,
             ]
         }));
+        // Allows the EC2 to Log and create it's Log Group + Stream
+        this.gameserverRole.addToPolicy(new PolicyStatement({
+            actions: [
+                "logs:PutLogEvents",
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+            ],
+            resources: [
+                '*',
+            ]
+        }));
+
 
         if (stackConfig.ENABLE_ROUTE_53_MAPPING) {
             // Power for the EC2 instance to create ARecords for itself.

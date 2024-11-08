@@ -1,9 +1,12 @@
 import fastify from 'fastify'
+import logger from './code/logger'
+
+logger.info('Node.js Application started')
 
 const server = fastify()
-
 server.get('/ping', async (request, reply) => {
-    return 'Pong (updated response)\n'
+    logger.info(`Ping endpoint was hit!`)
+    return 'pong\n'
 })
 
 server.listen({ port: 8080, host: '0.0.0.0' }, (err, address) => {
@@ -11,5 +14,5 @@ server.listen({ port: 8080, host: '0.0.0.0' }, (err, address) => {
         console.error(err)
         process.exit(1)
     }
-    console.log(`Server listening at ${address}`)
+    logger.info(`HTTP server started on: ${address}`)
 })
