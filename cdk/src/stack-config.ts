@@ -3,7 +3,7 @@ import { GameserverConfig, IPPrefixLists } from "./stack-config-types";
 
 export const serverInstances: GameserverConfig[] = [
     {
-        id: 'gameserver_1',
+        id: 'gameserver_3',
         name: 'minecraft',
         startOnNextBoot: 'minecraft',
         instanceType: 't3a.micro', // $0.0094 per hour / $0.2256 per day, safe to test with.

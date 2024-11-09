@@ -129,16 +129,17 @@ export class EC2ProvisioningConstruct extends Construct {
                     }
                 }]
             });
-            // TODO: need to add a conditional if statement here..
-            Tags.of(instance).add('Server Name', serverName);
-            Tags.of(instance).add('Game Hosted', instanceConfig.startOnNextBoot);
-            
+
+            Tags.of(instance).add('Name', 'GameserverStackEC2Provision/'+instanceConfig.id);
+            Tags.of(instance).add('ServerName', serverName);
+            Tags.of(instance).add('GameHosted', instanceConfig.startOnNextBoot);
+
             if (stackConfig.ENABLE_ROUTE_53_MAPPING) {
-                Tags.of(instance).add('Domain Name', stackConfig.DOMAIN_NAME);
-                Tags.of(instance).add('Hosted Zone', ROUTE53_ZONE_ID);
+                Tags.of(instance).add('DomainName', stackConfig.DOMAIN_NAME);
+                Tags.of(instance).add('HostedZone', ROUTE53_ZONE_ID);
             }
             return instance;
-            
+
         });
     }
 }

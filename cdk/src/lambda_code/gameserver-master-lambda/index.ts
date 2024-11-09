@@ -49,8 +49,8 @@ async function fetchStackInstanceDetails() {
         return {
             id: instanceData.InstanceId,
             state: instanceData.State,
-            gameHosted: instanceData.Tags?.find(tag => tag.Key === 'Game Hosted')?.Value,
-            serverName: instanceData.Tags?.find(tag => tag.Key === 'Server Name')?.Value,
+            gameHosted: instanceData.Tags?.find(tag => tag.Key === 'GameHosted')?.Value,
+            serverName: instanceData.Tags?.find(tag => tag.Key === 'ServerName')?.Value,
             url: instanceData.Tags?.find(tag => tag.Key === 'Server Url')?.Value,
             publicIp: instanceData.PublicIpAddress,
             instanceType: instanceData.InstanceType,
@@ -69,7 +69,7 @@ async function instanceAction(serverName: string, action: 'start' | 'stop') {
                 Values: ['GameServerStack']
             },
             {
-                Name: 'tag:Server Name',
+                Name: 'tag:ServerName',
                 Values: [serverName]
             }
         ]

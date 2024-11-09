@@ -40,10 +40,8 @@ systemctl enable crond
 
 echo '6: Installing and configuring Cloudwatch Agent... ===================================================='
 yum install -y amazon-cloudwatch-agent
-cp -f /opt/gameserver/cloudwatch-config.json /opt/aws/amazon-cloudwatch-agent/bin/config.json
-/opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a start
-systemctl enable amazon-cloudwatch-agent
-systemctl status amazon-cloudwatch-agent
+cp -f /opt/gameserver/cloudwatch-config.json /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+amazon-cloudwatch-agent-ctl -a start -s
 
 
 echo '7: Installing, Building and Starting Node server... =================================================='

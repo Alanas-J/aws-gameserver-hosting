@@ -73,8 +73,8 @@ export class ServerMasterLambdaConstruct extends Construct {
         })
         new CfnOutput(this, 'FunctionUrl', { value: this.functionUrl.url })
 
-        
-        if (stackConfig.ENABLE_ROUTE_53_MAPPING && stackConfig.LAMBDA_VANITY_URL) {
+
+        if (stackConfig.ENABLE_ROUTE_53_MAPPING && stackConfig.LAMBDA_VANITY_URL.ENABLED) {
             this.#provisionLambdaCloudFrontVanity()
         }
     }
