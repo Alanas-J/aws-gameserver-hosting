@@ -1,6 +1,6 @@
 import winston from "winston";
 
-const LOG_DIRECTORY = '/var/gameserver/logs'
+const LOG_DIRECTORY = '/var/gameserver/logs';
 
 
 const consoleTransport = new winston.transports.Console({ 
