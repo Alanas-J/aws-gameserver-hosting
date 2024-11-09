@@ -40,9 +40,7 @@ systemctl enable crond
 
 echo '6: Installing and configuring Cloudwatch Agent... ===================================================='
 yum install -y amazon-cloudwatch-agent
-cp -f /opt/gameserver/cloudwatch-config.json /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
-amazon-cloudwatch-agent-ctl -a start -s
-
+amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c file:/opt/gameserver/cloudwatch-config.json
 
 echo '7: Installing, Building and Starting Node server... =================================================='
 sudo -u ec2-user npm --prefix /opt/gameserver install
