@@ -1,6 +1,6 @@
 import fastify from 'fastify';
-import logger from './code/logger';
-import { fetchTagsFromMetadata } from './code/instanceMetadata';
+import logger from './utils/logger';
+import { fetchTagsFromMetadata } from './utils/instanceMetadata';
 
 logger.info('Node.js Application started');
 

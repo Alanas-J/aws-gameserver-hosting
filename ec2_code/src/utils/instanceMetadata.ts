@@ -16,7 +16,7 @@ export async function fetchTagsFromMetadata() {
 
         const instanceTags: {[key: string]: string} = {};
 
-        for (const tag in response.data.split('\n')) {
+        for (const tag of response.data.split('\n')) {
             if (['ServerName', 'DomainName', 'HostedZone','GameHosted'].includes(tag)) {
                 logger.info(`Fetching Tag: ${tag}`);
                 const { data: tagValue } = await axios.get(`${METADATA_TAGS_URL}/${tag}`, { headers: metadataServiceHeaders });
