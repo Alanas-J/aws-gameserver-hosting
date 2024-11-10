@@ -45,4 +45,4 @@ amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c file:/opt/gameserver/cl
 echo '7: Installing, Building and Starting Node server... =================================================='
 sudo -u ec2-user npm --prefix /opt/gameserver install
 sudo -u ec2-user npm --prefix /opt/gameserver run build
-sudo -u ec2-user pm2 start /opt/gameserver/dist --name gameserver-node-app
+sudo -u ec2-user pm2 start /opt/gameserver/dist --name gameserver-node-app --kill-timeout 3000
