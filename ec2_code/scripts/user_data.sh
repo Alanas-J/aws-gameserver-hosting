@@ -9,13 +9,7 @@ echo '1: Installing Node... ====================================================
 dnf install -y nodejs # May want to replace later with a specified Node.js version if bugs occur.
 
 
-echo '2: Installing PM2... ================================================================================='
-npm install -g pm2@latest
-pm2 startup
-pm2 save
-
-
-echo '3: Directory Setup... ================================================================================'
+echo '2: Directory Setup... ================================================================================'
 # Making ec2_user own all of this here for now
 mkdir -p /opt/gameserver
 chown ec2-user:ec2-user /opt/gameserver
@@ -27,25 +21,45 @@ mkdir -p /var/gameserver/logs
 chown ec2-user:ec2-user /var/gameserver/logs
 
 
-echo '4: Initial S3 sync... ==============================================================================='
-# @TODO: May want to detect the S3 bucket instead of hardcoding
-sudo -u ec2-user aws s3 sync s3://gameserverstack-s3storagebucketcf59ebf7-hidmmd95ycsc/ec2_code/ /opt/gameserver/
-shopt -s globstar # <---- allows for /**/ to be used in paths
-chmod +x /opt/gameserver/**/*.sh # Adding execution permissions for every shell file
+echo '3: Server systemd configuration... ==================================================================='
+SERVICE_NAME="gameserver-node-http-server"
+NODE_APP_DIR="/opt/gameserver"
+
+echo "Creating systemd service file for $SERVICE_NAME..."
+bash -c "cat <<EOL > /etc/systemd/system/$SERVICE_NAME.service
+[Unit]
+Description=Gameserver's HTTP node app / gameserver controller.
+After=network.target
+
+[Service]
+ExecStartPre=$NODE_APP_DIR/scripts/utils/code-sync.sh
+ExecStart=/usr/bin/node $NODE_APP_DIR/dist/index.js
+WorkingDirectory=$NODE_APP_DIR
+Restart=always
+User=ec2-user
+Environment=PATH=/usr/bin:/usr/local/bin
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target
+EOL"
+
+echo "Reloading systemd daemon..."
+systemctl daemon-reload
+
+echo "Enabling $SERVICE_NAME to start on boot..."
+systemctl enable "$SERVICE_NAME"
+
+echo "Starting $SERVICE_NAME..."
+systemctl start "$SERVICE_NAME"
+
+echo "Checking status of $SERVICE_NAME..."
+systemctl status "$SERVICE_NAME" --no-pager
 
 
-echo '5: Installing crontab and adding startup script to crontab... ========================================'
-dnf install -y cronie
-systemctl start crond
-systemctl enable crond
-(sudo -u ec2-user crontab -l 2>/dev/null; echo "@reboot /opt/gameserver/scripts/boot_script.sh >> /var/gameserver/logs/boot_script.log 2>&1") | sudo -u ec2-user crontab -
-
-
-echo '6: Installing and configuring Cloudwatch Agent... ===================================================='
+echo '4: Installing and configuring Cloudwatch Agent... ===================================================='
 yum install -y amazon-cloudwatch-agent
 amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c file:/opt/gameserver/cloudwatch-config.json
 
-echo '7: Installing, Building and Starting Node server... =================================================='
-sudo -u ec2-user npm --prefix /opt/gameserver install
-sudo -u ec2-user npm --prefix /opt/gameserver run build
-sudo -u ec2-user pm2 start /opt/gameserver/dist --name gameserver-node-app --kill-timeout 10000
+
+echo '====================================== EC2 INSTALL COMPLETE =========================================='
