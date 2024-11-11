@@ -1,4 +1,5 @@
 #!/bin/bash
+# WARNING: changing this script and deploying terminates all provisioned instances.
 
 echo '0: Updating DNF... ==================================================================================='
 dnf update;
@@ -10,6 +11,8 @@ dnf install -y nodejs # May want to replace later with a specified Node.js versi
 
 echo '2: Installing PM2... ================================================================================='
 npm install -g pm2@latest
+pm2 startup
+pm2 save
 
 
 echo '3: Directory Setup... ================================================================================'
@@ -35,7 +38,7 @@ echo '5: Installing crontab and adding startup script to crontab... ============
 dnf install -y cronie
 systemctl start crond
 systemctl enable crond
-(sudo -u ec2-user crontab -l 2>/dev/null; echo "@reboot sudo sh -c '/opt/gameserver/scripts/boot_script.sh >> /var/gameserver/logs/boot_script.log 2>&1'") | sudo -u ec2-user crontab -
+(sudo -u ec2-user crontab -l 2>/dev/null; echo "@reboot /opt/gameserver/scripts/boot_script.sh >> /var/gameserver/logs/boot_script.log 2>&1") | sudo -u ec2-user crontab -
 
 
 echo '6: Installing and configuring Cloudwatch Agent... ===================================================='
@@ -45,4 +48,4 @@ amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c file:/opt/gameserver/cl
 echo '7: Installing, Building and Starting Node server... =================================================='
 sudo -u ec2-user npm --prefix /opt/gameserver install
 sudo -u ec2-user npm --prefix /opt/gameserver run build
-sudo -u ec2-user pm2 start /opt/gameserver/dist --name gameserver-node-app --kill-timeout 3000
+sudo -u ec2-user pm2 start /opt/gameserver/dist --name gameserver-node-app --kill-timeout 10000

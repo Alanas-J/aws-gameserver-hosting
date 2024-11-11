@@ -19,7 +19,9 @@ server.listen({ port: 8080, host: '0.0.0.0' }, async (err, address) => {
     }
     logger.info(`HTTP server started on: ${address}`);
 
-    setDNSRecord('UPSERT', await getInstanceMetadata())
+    setDNSRecord('UPSERT', await getInstanceMetadata());
+    process.on('SIGINT', gracefulShutdown);
+    process.on('SIGTERM', gracefulShutdown);
 })
 
 
@@ -37,5 +39,3 @@ async function gracefulShutdown() {
 
     process.exit(0);
 }
-process.on('SIGINT', gracefulShutdown);
-process.on('SIGTERM', gracefulShutdown);
