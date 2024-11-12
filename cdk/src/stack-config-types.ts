@@ -8,8 +8,8 @@ export enum IPPrefixLists {
 }
 
 export interface GameserverConfig {
-    // Used to identify the specific instance + becomes the subdomain name.
-    // WARNING: id changes will recreate the instance deleting files.
+    // Used to identify the specific instance + becomes the subdomain name if name is not provided.
+    // WARNING: this acts as the logical id for CloudFormation to track, a change causes resource recreation.
     id: string,
     // Used as the Route 53 subdomain name when provided, otherwise the id is used.
     name?: string 

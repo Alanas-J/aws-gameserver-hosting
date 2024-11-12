@@ -1,15 +1,16 @@
 import { Tags } from "aws-cdk-lib";
-import { BlockDeviceVolume, EbsDeviceVolumeType, Instance, InstanceType, MachineImage, Peer, Port, SecurityGroup, SubnetType, UserData, Vpc } from "aws-cdk-lib/aws-ec2";
+import { CfnInstance, CfnLaunchTemplate, EbsDeviceVolumeType, MachineImage, Peer, Port, SecurityGroup, Vpc } from "aws-cdk-lib/aws-ec2";
 import { Construct } from "constructs";
-import { serverInstances } from "../../stack-config";
-import { PolicyStatement, Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
+import { stackConfig, serverInstances } from "../../stack-config";
+import { CfnInstanceProfile, PolicyStatement, Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
 import { S3StorageConstruct } from "../s3-storage-construct/s3-storage-construct";
 import path = require("path");
 import { readFileSync } from "fs";
+import { ROUTE53_ZONE_ID } from "../../personal_config";
 
 
 export class EC2ProvisioningConstruct extends Construct {
-    gameservers: Instance[]
+    gameservers: CfnInstance[]
     gameserverRole: Role
 
     constructor(parent: Construct, vpc: Vpc, s3Construct: S3StorageConstruct) {
@@ -59,55 +60,86 @@ export class EC2ProvisioningConstruct extends Construct {
                 `arn:aws:s3:::${s3Construct.s3Bucket.bucketName}/server_backups/*`,
             ]
         }));
-        // Power to fix Route 53 records post boot.
-        /* @TODO: figure out Route53 record policy, this will require testing.
+        // Allows the EC2 to Log and create it's Log Group + Stream
         this.gameserverRole.addToPolicy(new PolicyStatement({
             actions: [
-                'route53:ChangeResourceRecordSets',
-                'route53:ListResourceRecordSets',
+                "logs:PutLogEvents",
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
             ],
-            resources: ['arn:aws:route53:::hostedzone/YOUR_HOSTED_ZONE_ID'],
-            conditions: {
-                'StringEquals': {
-                    'route53:ChangeResourceRecordSets/<tagkey>': '<tag value>',
-                },
-            },
+            resources: [
+                '*',
+            ]
         }));
-        */
 
-        // UserData script loading
+
+        if (stackConfig.ENABLE_ROUTE_53_MAPPING) {
+            // Power for the EC2 instance to create ARecords for itself.
+            // @TODO: I may move this to a dedicated lambda the EC2 instance has to ask in the future.
+            this.gameserverRole.addToPolicy(new PolicyStatement({
+                actions: [
+                    'route53:ChangeResourceRecordSets',
+                    "route53:GetChange",
+                    'route53:ListResourceRecordSets',
+                ],
+                resources: [`arn:aws:route53:::hostedzone/${ROUTE53_ZONE_ID}`],
+            }));
+        }
+
+        // Currently the only way to enable metadata tag access is via Cfn constructs in the CDK.
+        const instanceProfile = new CfnInstanceProfile(this, 'InstanceProfile', {
+            roles: [this.gameserverRole.roleName]
+        });
         const scriptPath = path.join(__dirname, '../../../../ec2_code/scripts/user_data.sh');
-        const scriptContent = readFileSync(scriptPath, 'utf8');
-        const userData = UserData.forLinux();
-        userData.addCommands(scriptContent);
-
+        const scriptContent = readFileSync(scriptPath);
+        const launchTemplate = new CfnLaunchTemplate(this, 'LaunchTemplate', {
+            launchTemplateData: {
+                iamInstanceProfile: {
+                    arn: instanceProfile.attrArn
+                },
+                metadataOptions: {
+                    httpEndpoint: 'enabled',
+                    httpProtocolIpv6: 'enabled',
+                    httpTokens: 'required',
+                    instanceMetadataTags: 'enabled'
+                },
+                imageId: MachineImage.latestAmazonLinux2023().getImage(this).imageId,
+                securityGroupIds: [gameserverSecurityGroup.securityGroupId],
+                userData: scriptContent.toString('base64'),
+            }
+        });
 
         // Gameserver provisioning
         this.gameservers = serverInstances.map((instanceConfig) => {
             const serverName = instanceConfig.name ?? instanceConfig.id;
 
-            const instance = new Instance(this, instanceConfig.id, {
-                vpc,
-                vpcSubnets: { subnetType: SubnetType.PUBLIC },
-                machineImage: MachineImage.latestAmazonLinux2023(),
-                instanceType: new InstanceType(instanceConfig.instanceType),
-                securityGroup: gameserverSecurityGroup,
-                blockDevices: [{
+            const instance = new CfnInstance(this, instanceConfig.id, {
+                launchTemplate: {
+                    launchTemplateId: launchTemplate.ref,
+                    version: launchTemplate.attrLatestVersionNumber,
+                },
+                subnetId: vpc.publicSubnets[0].subnetId,
+                instanceType: instanceConfig.instanceType,
+                blockDeviceMappings: [{
                     deviceName: '/dev/xvda', // Root device name
-                    volume: BlockDeviceVolume.ebs(instanceConfig.ssdStorageCapacityGiB, { 
-                        deleteOnTermination: true,
+                    ebs: {
+                        volumeSize: instanceConfig.ssdStorageCapacityGiB,
                         volumeType: EbsDeviceVolumeType.GP3,
-                    }),
-                }],
-                role: this.gameserverRole,
-                userData,
-                userDataCausesReplacement: true // TODO: just for development..
+                        deleteOnTermination: true
+                    }
+                }]
             });
 
-            // @TODO: Need to figure out if I'll use parameter store or just tags.
-            Tags.of(instance).add('Server Name', serverName);
-            Tags.of(instance).add('Game Hosted', instanceConfig.startOnNextBoot);
+            Tags.of(instance).add('Name', 'GameserverStackEC2Provision/'+instanceConfig.id);
+            Tags.of(instance).add('ServerName', serverName);
+            Tags.of(instance).add('GameHosted', instanceConfig.startOnNextBoot);
+
+            if (stackConfig.ENABLE_ROUTE_53_MAPPING) {
+                Tags.of(instance).add('DomainName', stackConfig.DOMAIN_NAME);
+                Tags.of(instance).add('HostedZone', ROUTE53_ZONE_ID);
+            }
             return instance;
+
         });
     }
 }
