@@ -36,9 +36,6 @@ async function gracefulShutdown() {
         logger.error('Error gracefully shutting down.', { error });
         process.exit(1);
     }
-
-    // Giving Cloudwatch Agent 3 seconds to try send final logs.
-    setTimeout(() => {
-        process.exit(0);
-    }, 3000)
+    
+    process.exit(0);
 }
