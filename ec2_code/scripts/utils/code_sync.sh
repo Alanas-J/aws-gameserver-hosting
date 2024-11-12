@@ -10,5 +10,5 @@ echo '== Sync complete! =='
 
 echo '== Building node app... =='
 npm --prefix $GAMESERVER_CODE_DIR install
-npm --prefix $GAMESERVER_CODE_DIR build
+npm --prefix $GAMESERVER_CODE_DIR run build
 echo '== Complete! =='

@@ -47,13 +47,15 @@ Description=Gameserver's HTTP node app / gameserver controller.
 After=network.target
 
 [Service]
-ExecStartPre=/bin/bash -c "$GAMESERVER_CODE_DIR/scripts/utils/code_sync.sh >> '$GAMESERVER_VAR_DIR/logs/code_sync.log' 2>&1"
+ExecStartPre=/bin/bash -c \"$GAMESERVER_CODE_DIR/scripts/utils/code_sync.sh >> $GAMESERVER_VAR_DIR/logs/code_sync.log 2>&1\"
 ExecStart=/usr/bin/node $GAMESERVER_CODE_DIR/dist/index.js
 WorkingDirectory=$GAMESERVER_CODE_DIR
 Restart=always
 RestartSec=10 
 User=$GAMESERVER_USER
 Environment=PATH=/usr/bin:/usr/local/bin
+Environment=GAMESERVER_CODE_DIR=$GAMESERVER_CODE_DIR
+Environment=GAMESERVER_VAR_DIR=$GAMESERVER_VAR_DIR
 TimeoutStopSec=60 
 
 [Install]
