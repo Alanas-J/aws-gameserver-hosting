@@ -18,11 +18,11 @@ dnf install -y nodejs # May want to replace later with a specified Node.js versi
 echo '2: Server User + Directory Setup... =================================================================='
 useradd -r -m -d "/home/$GAMESERVER_USER" -s /usr/sbin/nologin "$GAMESERVER_USER"
 mkdir -p $GAMESERVER_CODE_DIR
-chown -r $GAMESERVER_USER:$GAMESERVER_USER $GAMESERVER_CODE_DIR
+chown -R $GAMESERVER_USER:$GAMESERVER_USER $GAMESERVER_CODE_DIR
 mkdir -p $GAMESERVER_SERVER_FILES_DIR
-chown -r $GAMESERVER_USER:$GAMESERVER_USER $GAMESERVER_SERVER_FILES_DIR
+chown -R $GAMESERVER_USER:$GAMESERVER_USER $GAMESERVER_SERVER_FILES_DIR
 mkdir -p $GAMESERVER_VAR_DIR/logs
-chown -r $GAMESERVER_USER:$GAMESERVER_USER $GAMESERVER_VAR_DIR
+chown -R $GAMESERVER_USER:$GAMESERVER_USER $GAMESERVER_VAR_DIR
 
 
 echo '3: Initial S3 pull... ================================================================================'
