@@ -11,6 +11,11 @@ server.get('/ping', async (request, reply) => {
     return 'pong\n';
 })
 
+server.get('/status', async (request, reply) => {
+    logger.info(`Status endpoint was hit!`);
+    return 'status will be here....\n';
+})
+
 
 server.listen({ port: 8080, host: '0.0.0.0' }, async (err, address) => {
     if (err) {
@@ -19,7 +24,9 @@ server.listen({ port: 8080, host: '0.0.0.0' }, async (err, address) => {
     }
     logger.info(`HTTP server started on: ${address}`);
 
-    setDNSRecord('UPSERT', await getInstanceMetadata());
+    const instanceMetadata = await getInstanceMetadata();
+
+    setDNSRecord('UPSERT', instanceMetadata);
     process.on('SIGINT', gracefulShutdown);
     process.on('SIGTERM', gracefulShutdown);
 })
@@ -36,6 +43,6 @@ async function gracefulShutdown() {
         logger.error('Error gracefully shutting down.', { error });
         process.exit(1);
     }
-    
+
     process.exit(0);
 }
