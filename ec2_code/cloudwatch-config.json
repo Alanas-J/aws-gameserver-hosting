@@ -6,7 +6,7 @@
                     {
                         "file_path": "/var/gameserver/logs/*.log",
                         "log_group_name": "/gameserver/logs",
-                        "timestamp_format": "%Y-%m-%d %H:%M:%S",
+                        "timestamp_format": "%Y-%m-%dT%H:%M:%S.%fZ",
                         "retention_in_days": 7
                     },
                     {

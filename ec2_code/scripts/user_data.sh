@@ -44,7 +44,7 @@ Description=Gameserver's HTTP node app / gameserver controller.
 After=network.target
 
 [Service]
-ExecStartPre=$NODE_APP_DIR/scripts/utils/code_sync.sh
+ExecStartPre=/bin/bash -c "$NODE_APP_DIR/scripts/utils/code_sync.sh >> '/var/gameserver/logs/code_sync.log' 2>&1"
 ExecStart=/usr/bin/node $NODE_APP_DIR/dist/index.js
 WorkingDirectory=$NODE_APP_DIR
 Restart=always
