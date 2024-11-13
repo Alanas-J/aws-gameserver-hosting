@@ -15,6 +15,8 @@ export interface GameserverConfig {
     name?: string 
     // Game hosted on the instance, deploying a new game string + restarting the instance will swap servers.
     startOnNextBoot: 'minecraft' | 'factorio'
+    version?: string // version to launch / install, if not specified will download latest.
+
     // On first load of a specific server will pull server files from S3, instead of a fresh install.
     initFromS3?: string
     // What type of instance to use.

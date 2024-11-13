@@ -2,34 +2,48 @@ import fastify from 'fastify';
 import logger from './utils/logger';
 import { setDNSRecord } from './utils/dns';
 import { getInstanceMetadata } from './utils/instanceMetadata';
+import { Gameserver, startGameserver } from './gameservers';
 
 logger.info('Node.js Application started');
 
-const server = fastify()
+let currentGameServer: Gameserver | undefined = undefined;
+
+const server = fastify();
 server.get('/ping', async (request, reply) => {
     logger.info(`Ping endpoint was hit!`);
     return 'pong\n';
-})
+});
 
 server.get('/status', async (request, reply) => {
     logger.info(`Status endpoint was hit!`);
-    return 'status will be here....\n';
-})
+    if (currentGameServer) {
+        // @TODO: implement caching logic.
+        const status = await currentGameServer.getStatus();
+        logger.info('Server status:', { status });
+        
+        return status;
+    } 
+    
+    logger.warn('Gameserver not running.')
+    reply.status(500);
+    return { message: 'Server not running.' }
+});
 
 
-server.listen({ port: 8080, host: '0.0.0.0' }, async (err, address) => {
-    if (err) {
-        console.error(err);
+server.listen({ port: 8080, host: '0.0.0.0' }, async (error, address) => {
+    if (error) {
+        logger.error('Error starting HTTP server', { error });
         process.exit(1);
     }
     logger.info(`HTTP server started on: ${address}`);
 
     const instanceMetadata = await getInstanceMetadata();
-
+    currentGameServer = startGameserver(instanceMetadata);
     setDNSRecord('UPSERT', instanceMetadata);
+
     process.on('SIGINT', gracefulShutdown);
     process.on('SIGTERM', gracefulShutdown);
-})
+});
 
 
 async function gracefulShutdown() {
@@ -37,6 +51,7 @@ async function gracefulShutdown() {
 
     try {
         await setDNSRecord('DELETE', await getInstanceMetadata())
+        if (currentGameServer) await currentGameServer.shutDown();
         await server.close()
 
     } catch (error) {
