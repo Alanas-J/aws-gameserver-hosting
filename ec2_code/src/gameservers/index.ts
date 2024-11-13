@@ -1,9 +1,9 @@
 import { InstanceMetadata } from "../utils/instanceMetadata"
 import { FactorioServer } from "./factorio"
 
-interface GameserverStatus {
+export interface GameserverStatus {
     state: 'installing' | 'updating' | 'starting' | 'running' | 'shutting-down' | 'status-check-fail'
-    startedTime: number
+    launchTime: string
     playerCount?: number,
     maxPlayerCount?: number
 }

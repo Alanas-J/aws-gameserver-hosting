@@ -37,10 +37,13 @@ server.listen({ port: 8080, host: '0.0.0.0' }, async (error, address) => {
     }
     logger.info(`HTTP server started on: ${address}`);
 
-    const instanceMetadata = await getInstanceMetadata();
-    currentGameServer = startGameserver(instanceMetadata);
-    setDNSRecord('UPSERT', instanceMetadata);
-
+    try {
+        const instanceMetadata = await getInstanceMetadata();
+        currentGameServer = startGameserver(instanceMetadata);
+        setDNSRecord('UPSERT', instanceMetadata);
+    } catch (error) {
+        logger.error('Failed to start the game server!', { error })
+    }
     process.on('SIGINT', gracefulShutdown);
     process.on('SIGTERM', gracefulShutdown);
 });
