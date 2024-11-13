@@ -1,4 +1,5 @@
 import { InstanceMetadata } from "../utils/instanceMetadata"
+import logger from "../utils/logger"
 import { FactorioServer } from "./factorio"
 
 export interface GameserverStatus {
@@ -16,6 +17,8 @@ export interface Gameserver {
 
 
 export function startGameserver(instanceMeta: InstanceMetadata): Gameserver | undefined {
+    logger.info(`Starting a ${instanceMeta.tags.gameHosted} server`);
+    
     switch (instanceMeta.tags.gameHosted) {
         case 'factorio':
             return new FactorioServer(instanceMeta)

@@ -10,6 +10,12 @@
                         "retention_in_days": 7
                     },
                     {
+                        "file_path": "/var/gameserver/logs/factorio/*.log",
+                        "log_group_name": "/gameserver/logs",
+                        "log_stream_name": "{hostname}-{instance_id}-factorio",
+                        "retention_in_days": 7
+                    },
+                    {
                         "file_path": "/var/log/cloud-init-output.log",
                         "log_group_name": "/gameserver/logs",
                         "log_stream_name": "{hostname}-{instance_id}-instance-init",

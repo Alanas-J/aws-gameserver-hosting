@@ -45,7 +45,7 @@ export async function fetchTagsFromMetadata(metadataServiceToken: string): Promi
         const instanceTags: {[key: string]: string} = {};
 
         for (const tag of response.data.split('\n')) {
-            if (['ServerName', 'DomainName', 'HostedZone','GameHosted, GameHostedVersion'].includes(tag)) {
+            if (['ServerName', 'DomainName', 'HostedZone','GameHosted', 'GameHostedVersion'].includes(tag)) {
                 logger.info(`Fetching Tag: ${tag}`);
                 const { data: tagValue } = await axios.get(`${METADATA_TAGS_URL}/${tag}`, { headers: metadataServiceHeaders });
 

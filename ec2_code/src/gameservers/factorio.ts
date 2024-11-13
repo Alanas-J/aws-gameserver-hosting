@@ -39,7 +39,7 @@ export class FactorioServer implements Gameserver {
             }
         } else {
             logger.info('No manifest file written -- performing first time install.');
-            installVersion = 'latest';
+            installVersion = 'stable';
             
             // Adding a factorio log directory
             mkdirSync(`${process.env.GAMESERVER_VAR_DIR}/logs/factorio`) 
@@ -55,10 +55,10 @@ export class FactorioServer implements Gameserver {
 
             logger.info('Downloading factorio server.');
             try {
-                execSync(`wget -O ${serverFilepath} ${factorioDownloadUrl}/factorio.tar.xz`);
+                execSync(`wget -O ${serverFilepath}/factorio.tar.xz ${factorioDownloadUrl}`);
                 logger.info(`Server downloaded successfully to ${serverFilepath}`);
             } catch (error: any) {
-                logger.error('Error downloading file', { error });
+                logger.error('Error downloading file', { errorMessage: error.message, stdError: error?.stderr.toString() });
                 throw error;
             }
 
@@ -68,7 +68,7 @@ export class FactorioServer implements Gameserver {
                 execSync(`tar -xf ${serverFilepath}/factorio.tar.xz -C ${serverFilepath}`);
                 logger.info(`Server extracted successfully to ${serverFilepath}`);
             } catch (error: any) {
-                logger.error('Error extracting file', { error });
+                logger.error('Error extracting file', { errorMessage: error.message, stdError: error?.stderr.toString() });
                 throw error;
             }
 
@@ -90,7 +90,7 @@ export class FactorioServer implements Gameserver {
             logger.info('Factorio server started in screen session.');
 
         } catch (error: any) {
-            logger.error('Error starting Factorio server in screen', { error });
+            logger.error('Error starting Factorio server in screen', { errorMessage: error.message, stdError: error?.stderr.toString() });
             throw error;
         }
 
@@ -109,7 +109,7 @@ export class FactorioServer implements Gameserver {
             logger.info('Shutting down factorio server.');
             execSync('screen -S factorio -X stuff "/quit\\n" && screen -S factorio -r');
         } catch (error: any) {
-            logger.error('Error shutting factorio server down gracefully.', { error });
+            logger.error('Error shutting factorio server down gracefully.', { errorMessage: error.message, stdError: error?.stderr.toString() });
         }
         return {} as any
     }
