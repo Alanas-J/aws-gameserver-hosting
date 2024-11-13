@@ -94,17 +94,18 @@ export class FactorioServer implements Gameserver {
             const factorioBinaryPath = `${serverFilepath}/factorio/bin/x64/factorio`
             const factorioSavesPath = `${serverFilepath}/factorio/saves`;
             if (!existsSync(factorioSavesPath)) {
-                logger.info("Factorio saves directory doesn't exist creating first save...");
                 try {
-                    execSync(`${factorioBinaryPath} --create ${factorioSavesPath}/initial-save.zip | tee -a ${factorioLogPath}/factorio-${this.status.launchTime}.log"`);
-                    logger.info(`Server extracted successfully to ${serverFilepath}`);
+                    const commmand = `${factorioBinaryPath} --create ${factorioSavesPath}/initial-save.zip | tee -a ${factorioLogPath}/factorio-${this.status.launchTime}.log`
+                    logger.info("Factorio saves directory doesn't exist; creating first save...");
+                    execSync(commmand);
+                    logger.info(`Initial save created...`);
                 } catch (error: any) {
-                    logger.error('Error extracting file', { errorMessage: error.message, stdError: error?.stderr.toString() });
+                    logger.error('Error creating initial save', { errorMessage: error.message, stdError: error?.stderr.toString() });
                     throw error;
                 }
             }
 
-            const factorioStartCmd = `${factorioBinaryPath} --start-server-load-latest --rcon-port 27015 --rcon-password "sdfgsfdgsdfg" | tee -a ${factorioLogPath}/factorio-${this.status.launchTime}.log"`;
+            const factorioStartCmd = `${factorioBinaryPath} --start-server-load-latest --rcon-port 27015 --rcon-password "sdfgsfdgsdfg" | tee -a ${factorioLogPath}/factorio-${this.status.launchTime}.log`;
             execSync(`screen -S factorio -d -m bash -c '${factorioStartCmd}'`);
 
             logger.info('Factorio server started in screen session.');
