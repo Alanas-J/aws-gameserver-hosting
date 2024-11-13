@@ -40,9 +40,6 @@ export class FactorioServer implements Gameserver {
         } else {
             logger.info('No manifest file written -- performing first time install.');
             installVersion = 'stable';
-            
-            // Adding a factorio log directory
-            mkdirSync(`${process.env.GAMESERVER_VAR_DIR}/logs/factorio`) 
         }
 
         const serverFilepath = process.env.GAMESERVER_SERVER_FILES_DIR+'/factorio';
@@ -55,6 +52,11 @@ export class FactorioServer implements Gameserver {
 
             logger.info('Downloading factorio server.');
             try {
+                if (!existsSync(serverFilepath)) {
+                    logger.info('Creating factorio server file directory...', { path: serverFilepath });
+                    mkdirSync(serverFilepath);
+                }
+
                 execSync(`wget -O ${serverFilepath}/factorio.tar.xz ${factorioDownloadUrl}`);
                 logger.info(`Server downloaded successfully to ${serverFilepath}`);
             } catch (error: any) {
@@ -83,10 +85,28 @@ export class FactorioServer implements Gameserver {
         // start server
         logger.info('Starting Factorio server...');
         try {
-            const logFilePath = `${process.env.GAMESERVER_VAR_DIR}/logs/factorio/factorio-${this.status.launchTime}.log`
-            const factorioStartCmd = `${serverFilepath}/factorio --start-server-load-latest --rcon-port 27015 --rcon-password "sdfgsfdgsdfg" | tee -a ${logFilePath}"`;
+            const factorioLogPath = `${process.env.GAMESERVER_VAR_DIR}/logs/factorio`;
+            if (!existsSync(factorioLogPath)) {
+                logger.info('Creating factorio log directory...', { path: factorioLogPath });
+                mkdirSync(factorioLogPath);
+            }
 
+            const factorioBinaryPath = `${serverFilepath}/factorio/bin/x64/factorio`
+            const factorioSavesPath = `${serverFilepath}/factorio/saves`;
+            if (!existsSync(factorioSavesPath)) {
+                logger.info("Factorio saves directory doesn't exist creating first save...");
+                try {
+                    execSync(`${factorioBinaryPath} --create ${factorioSavesPath}/initial-save.zip | tee -a ${factorioLogPath}/factorio-${this.status.launchTime}.log"`);
+                    logger.info(`Server extracted successfully to ${serverFilepath}`);
+                } catch (error: any) {
+                    logger.error('Error extracting file', { errorMessage: error.message, stdError: error?.stderr.toString() });
+                    throw error;
+                }
+            }
+
+            const factorioStartCmd = `${factorioBinaryPath} --start-server-load-latest --rcon-port 27015 --rcon-password "sdfgsfdgsdfg" | tee -a ${factorioLogPath}/factorio-${this.status.launchTime}.log"`;
             execSync(`screen -S factorio -d -m bash -c '${factorioStartCmd}'`);
+
             logger.info('Factorio server started in screen session.');
 
         } catch (error: any) {
