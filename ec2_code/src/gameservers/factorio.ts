@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, writeFileSync } from "fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import { Gameserver, GameserverStatus } from ".";
 import { InstanceMetadata } from "../utils/instanceMetadata";
 import logger from "../utils/logger";
@@ -40,7 +40,12 @@ export class FactorioServer implements Gameserver {
         } else {
             logger.info('No manifest file written -- performing first time install.');
             installVersion = 'latest';
+            
+            // Adding a factorio log directory
+            mkdirSync(`${process.env.GAMESERVER_VAR_DIR}/logs/factorio`) 
         }
+
+        const serverFilepath = process.env.GAMESERVER_SERVER_FILES_DIR+'/factorio';
 
         if (installVersion) {
             logger.info('Starting server install.');
@@ -67,12 +72,6 @@ export class FactorioServer implements Gameserver {
                 throw error;
             }
 
-
-            logger.info('@TODO: Configuring factorio server.');
-            // located at: factorio/config/config.ini
-            // will need to enable RCON
-            // + set RCON password.
-
             logger.info('Updating server manifest.');
             const manifest: FactorioServerManifest = {
                 installedVersion: installVersion
@@ -82,14 +81,36 @@ export class FactorioServer implements Gameserver {
         }
 
         // start server
+        logger.info('Starting Factorio server...');
+        try {
+            const logFilePath = `${process.env.GAMESERVER_VAR_DIR}/logs/factorio/factorio-${this.status.launchTime}.log`
+            const factorioStartCmd = `${serverFilepath}/factorio --start-server-load-latest --rcon-port 27015 --rcon-password "sdfgsfdgsdfg" | tee -a ${logFilePath}"`;
+
+            execSync(`screen -S factorio -d -m bash -c '${factorioStartCmd}'`);
+            logger.info('Factorio server started in screen session.');
+
+        } catch (error: any) {
+            logger.error('Error starting Factorio server in screen', { error });
+            throw error;
+        }
+
+        logger.info('Started!');
+        this.status.state = 'running';
+        // @TODO: Automate a interval to ensure server is still alive.
     }
 
     getStatus() {
-
         return {} as any
     }
 
     shutDown() {
+        this.status.state = 'shutting-down'
+        try {
+            logger.info('Shutting down factorio server.');
+            execSync('screen -S factorio -X stuff "/quit\\n" && screen -S factorio -r');
+        } catch (error: any) {
+            logger.error('Error shutting factorio server down gracefully.', { error });
+        }
         return {} as any
     }
 }
