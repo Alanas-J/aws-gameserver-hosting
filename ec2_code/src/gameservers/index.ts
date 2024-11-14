@@ -3,7 +3,7 @@ import logger from "../utils/logger"
 import { FactorioServer } from "./factorio"
 
 export interface GameserverStatus {
-    state: 'installing' | 'updating' | 'starting' | 'running' | 'shutting-down' | 'status-check-fail'
+    state: 'installing' | 'starting' | 'running' | 'shutting-down' | 'crashed' | 'status-check-fail' 
     launchTime: string
     playerCount?: number,
     maxPlayerCount?: number

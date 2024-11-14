@@ -3,7 +3,7 @@ import { GameserverConfig, IPPrefixLists } from "./stack-config-types";
 
 export const serverInstances: GameserverConfig[] = [
     {
-        id: 'gameserver_3',
+        id: 'gameserver_1',
         name: 'factorio',
         startOnNextBoot: 'factorio',
         instanceType: 't3a.small', // $0.0094 per hour / $0.2256 per day, safe to test with.
