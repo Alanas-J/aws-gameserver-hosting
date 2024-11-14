@@ -52,6 +52,7 @@ ExecStart=/usr/bin/node $GAMESERVER_CODE_DIR/dist/index.js
 WorkingDirectory=$GAMESERVER_CODE_DIR
 Restart=always
 RestartSec=10 
+TimeoutStartSec=120
 User=$GAMESERVER_USER
 Environment=PATH=/usr/bin:/usr/local/bin
 Environment=GAMESERVER_CODE_DIR=$GAMESERVER_CODE_DIR

@@ -4,7 +4,6 @@ import { InstanceMetadata } from "../utils/instanceMetadata";
 import logger from "../utils/logger";
 import { execSync } from "child_process";
 
-
 interface FactorioServerData {
     version?: string
 }
@@ -13,6 +12,7 @@ interface FactorioServerData {
 export class FactorioServer implements Gameserver {
     status: GameserverStatus
     factorioServerData: FactorioServerData = {}
+    crashCheckInterval: NodeJS.Timeout
 
     constructor(instanceMeta: InstanceMetadata) {
         console.log(instanceMeta);
@@ -112,14 +112,25 @@ export class FactorioServer implements Gameserver {
 
         } catch (error: any) {
             logger.error('Error starting Factorio server in screen', { errorMessage: error.message, stdError: error?.stderr.toString() });
-            this.status.state = 'crashed';
+            this.status.state = 'stopped';
             throw error;
         }
 
         logger.info('Started!');
         this.status.state = 'running';
-        // @TODO: Automate a interval to ensure server is still alive.
+
+        // Crash check loop
+        this.crashCheckInterval = setInterval(() => {
+            try {
+                const output = execSync('screen -ls | grep "factorio" || true').toString();
+
+                logger.info("Isalive check TEST", { output }); // @TODO Remove this specific log.
+            } catch (error: any) {
+                logger.error('Error performing server crash check', { errorMessage: error.message, stdError: error?.stderr.toString() });
+            }
+        }, 5000)
     }
+
 
     getServerVersion(factorioExecPath: string): string {
         try {
@@ -141,6 +152,7 @@ export class FactorioServer implements Gameserver {
     getStatus() {
         return {} as any
     }
+
 
     shutDown() {
         this.status.state = 'shutting-down'
