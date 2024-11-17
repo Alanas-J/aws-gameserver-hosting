@@ -9,9 +9,9 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
   "dependencies": {
-    "aws-sdk": "^2.1692.0",
+    "@aws-sdk/client-ec2": "^3.694.0",
+    "@aws-sdk/client-route-53": "^3.693.0",
     "axios": "^1.7.7",
     "fastify": "^5.0.0",
     "winston": "^3.16.0"

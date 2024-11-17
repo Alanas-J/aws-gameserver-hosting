@@ -22,7 +22,7 @@ export class S3StorageConstruct extends Construct {
         new BucketDeployment(this, 'BucketServerCodeDeploy', {
             sources: [
                 Source.asset('../ec2_code', {
-                    exclude: ['dist/**', 'node_modules/**', '**/node_modules/**', 'node_modules']
+                    exclude: ['node_modules/**', '**/node_modules/**', 'node_modules']
                 })
             ],
             destinationBucket: this.s3Bucket,

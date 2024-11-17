@@ -1,0 +1,13 @@
+{
+  "name": "aws-gameserver-hosting",
+  "version": "0.0.1",
+  "description": "On-demand EC2 server hosting via AWS CDK",
+  "main": "index.js",
+  "scripts": {
+    "install:cdk": "cd ./cdk && npm i",
+    "install:ec2_code": "cd ./ec2_code && npm i",
+    "install": "npm run install:cdk && npm run install:ec2_code",
+    "deploy": "npm --prefix ./ec2_code run build && cd ./cdk && cdk deploy"
+  },
+  "author": "Alanas Jakubauskas"
+}

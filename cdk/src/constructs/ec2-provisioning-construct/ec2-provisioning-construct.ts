@@ -133,6 +133,7 @@ export class EC2ProvisioningConstruct extends Construct {
             Tags.of(instance).add('Name', 'GameserverStackEC2Provision/'+instanceConfig.id);
             Tags.of(instance).add('ServerName', serverName);
             Tags.of(instance).add('GameHosted', instanceConfig.startOnNextBoot);
+            if (instanceConfig.version) Tags.of(instance).add('GameHostedVersion', instanceConfig.version);
 
             if (stackConfig.ENABLE_ROUTE_53_MAPPING) {
                 Tags.of(instance).add('DomainName', stackConfig.DOMAIN_NAME);

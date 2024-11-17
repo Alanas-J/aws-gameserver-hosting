@@ -9,6 +9,7 @@ export interface InstanceMetadata {
     tags: {
         serverName: string
         gameHosted: 'minecraft' | 'factorio'
+        gameHostedVersion?: string
         domainName?: string
         hostedZone?: string
     }
@@ -44,7 +45,7 @@ export async function fetchTagsFromMetadata(metadataServiceToken: string): Promi
         const instanceTags: {[key: string]: string} = {};
 
         for (const tag of response.data.split('\n')) {
-            if (['ServerName', 'DomainName', 'HostedZone','GameHosted'].includes(tag)) {
+            if (['ServerName', 'DomainName', 'HostedZone','GameHosted', 'GameHostedVersion'].includes(tag)) {
                 logger.info(`Fetching Tag: ${tag}`);
                 const { data: tagValue } = await axios.get(`${METADATA_TAGS_URL}/${tag}`, { headers: metadataServiceHeaders });
 
@@ -56,6 +57,7 @@ export async function fetchTagsFromMetadata(metadataServiceToken: string): Promi
         return {
             serverName: instanceTags.ServerName,
             gameHosted: instanceTags.GameHosted as any,
+            gameHostedVersion: instanceTags?.GameHostedVersion,
             domainName: instanceTags?.DomainName,
             hostedZone: instanceTags?.HostedZone
         };
