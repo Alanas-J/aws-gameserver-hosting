@@ -3,10 +3,10 @@ import { GameserverConfig, IPPrefixLists } from "./stack-config-types";
 
 export const serverInstances: GameserverConfig[] = [
     {
-        id: 'gameserver_1',
+        id: 'gameserver_2',
         name: 'factorio',
         startOnNextBoot: 'factorio',
-        instanceType: 't3.medium',
+        instanceType: 't3a.small',
         ssdStorageCapacityGiB: 10 // $0.88 per month; 8GB expected just for the EC2 Amazon Linux snapshot.
     }
 ]

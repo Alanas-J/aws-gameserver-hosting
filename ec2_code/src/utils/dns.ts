@@ -1,6 +1,6 @@
 
 /* Temporary module; this will be performed in a dedicated lambda in the future */
-import { Route53, RRType } from "@aws-sdk/client-route-53";
+import { Route53 } from "aws-sdk";
 import { InstanceMetadata } from "./instanceMetadata";
 import logger from "./logger";
 
@@ -21,7 +21,7 @@ export async function setDNSRecord(action: 'UPSERT' | 'DELETE', instanceMetadata
                     Action: action,
                     ResourceRecordSet: {
                         Name: fullServerName,
-                        Type: RRType.A,
+                        Type: 'A',
                         TTL: 300, // 5 minutes TTL
                         ResourceRecords: [{ Value: instanceMetadata.publicIp }]
                     }
