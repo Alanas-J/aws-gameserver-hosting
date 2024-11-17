@@ -6,7 +6,6 @@ import { CfnInstanceProfile, PolicyStatement, Role, ServicePrincipal } from "aws
 import { S3StorageConstruct } from "../s3-storage-construct/s3-storage-construct";
 import path = require("path");
 import { readFileSync } from "fs";
-import { ROUTE53_ZONE_ID } from "../../personal_config";
 
 
 export class EC2ProvisioningConstruct extends Construct {
@@ -82,7 +81,7 @@ export class EC2ProvisioningConstruct extends Construct {
                     "route53:GetChange",
                     'route53:ListResourceRecordSets',
                 ],
-                resources: [`arn:aws:route53:::hostedzone/${ROUTE53_ZONE_ID}`],
+                resources: [`arn:aws:route53:::hostedzone/${stackConfig.ROUTE53_ZONE_ID}`],
             }));
         }
 
@@ -137,7 +136,7 @@ export class EC2ProvisioningConstruct extends Construct {
 
             if (stackConfig.ENABLE_ROUTE_53_MAPPING) {
                 Tags.of(instance).add('DomainName', stackConfig.DOMAIN_NAME);
-                Tags.of(instance).add('HostedZone', ROUTE53_ZONE_ID);
+                Tags.of(instance).add('HostedZone', stackConfig.ROUTE53_ZONE_ID);
             }
             return instance;
 

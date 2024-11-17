@@ -1,5 +1,6 @@
 import { RemovalPolicy } from "aws-cdk-lib";
 import { GameserverConfig, IPPrefixLists } from "./stack-config-types";
+import { CLOUDFRONT_SSL_CERTIFICATE_ARN, GAMEMASTER_LAMBDA_PASSWORD, ROUTE53_ZONE_ID } from "./personal_config";
 
 export const serverInstances: GameserverConfig[] = [
     {
@@ -21,8 +22,11 @@ export const stackConfig = {
     // If you want this stack to utilise a Route 53 managed domain configure the following.
     // This will provide subdomains for the EC2 instances.
     ENABLE_ROUTE_53_MAPPING: true,
-    ROUTE53_ZONE_ID: '',
+    ROUTE53_ZONE_ID: ROUTE53_ZONE_ID,
     DOMAIN_NAME: 'alanas-j.site',
+
+    // A string password to protect EC2 instance start/stop/restart actions.
+    LAMBDA_PASSWORD: GAMEMASTER_LAMBDA_PASSWORD,
 
     // Only applies if ENABLE_ROUTE_53_MAPPING is true.
     LAMBDA_VANITY_URL: {
@@ -32,7 +36,7 @@ export const stackConfig = {
         // Must be enabled on second deploy (as function url needs to be manually added to the config.)
         ENABLED: false, 
         SUBDOMAIN: 'gamemaster', // will become 'https://<LAMBDA_SUBDOMAIN_NAME>.<DOMAIN_NAME>/
-        CLOUDFRONT_SSL_CERTIFICATE_ARN: '', // Created via Certificate Manager in us-east-1.
+        CLOUDFRONT_SSL_CERTIFICATE_ARN: CLOUDFRONT_SSL_CERTIFICATE_ARN, // Created via Certificate Manager in us-east-1.
         LAMBDA_URL_ORIGIN: 'fnazecmthgh3kg6jvj4diegnri0mxxle.lambda-url.eu-west-1.on.aws' // must be manually copy/pasted.
     }
 }

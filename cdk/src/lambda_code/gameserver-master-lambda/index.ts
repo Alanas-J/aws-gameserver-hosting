@@ -1,4 +1,4 @@
-import { EC2Client, DescribeInstancesCommand, StopInstancesCommand, StartInstancesCommand } from "@aws-sdk/client-ec2";
+import { EC2Client, DescribeInstancesCommand, StopInstancesCommand, StartInstancesCommand, RebootInstancesCommand } from "@aws-sdk/client-ec2";
 import { httpResponse, LambdaFunctionUrlEvent } from './utils'
 
 const ec2Client = new EC2Client();
@@ -9,12 +9,17 @@ export async function handler (event: LambdaFunctionUrlEvent) {
     try {
         switch (path[1]) {
             case 'instances':
-                const instanceDetails = await fetchStackInstanceDetails()
+                const instanceDetails = await fetchStackInstanceDetails();
                 return httpResponse({ instanceDetails });
             
             case 'instance': 
-                if (['start', 'stop'].includes(path[3])) {
-                    // return instanceAction(path[2], path[3] as any) //@TODO: disabled for now, will need to configure auth to prevent abuse.
+                if (['start', 'stop', 'restart'].includes(path[3])) {
+                    if (event.requestContext.headers.Authorization === process.env.AUTH_PASSWORD) {
+                        return instanceAction(path[2], path[3] as any)
+
+                    } else {
+                        return httpResponse({ message: 'Unauthorized.' }, 401);
+                    }
                 }
                 break;
         }
@@ -24,6 +29,7 @@ export async function handler (event: LambdaFunctionUrlEvent) {
         return httpResponse({ message: 'Unexpected internal error.' }, 500);
     }
 };
+
 
 async function fetchStackInstanceDetails() {
     const stackInstances = []
@@ -51,7 +57,7 @@ async function fetchStackInstanceDetails() {
             state: instanceData.State,
             gameHosted: instanceData.Tags?.find(tag => tag.Key === 'GameHosted')?.Value,
             serverName: instanceData.Tags?.find(tag => tag.Key === 'ServerName')?.Value,
-            url: instanceData.Tags?.find(tag => tag.Key === 'Server Url')?.Value,
+            domain: instanceData.Tags?.find(tag => tag.Key === 'DomainName')?.Value,
             publicIp: instanceData.PublicIpAddress,
             instanceType: instanceData.InstanceType,
             launchTime: instanceData.LaunchTime
@@ -61,7 +67,7 @@ async function fetchStackInstanceDetails() {
 }
 
 
-async function instanceAction(serverName: string, action: 'start' | 'stop') {
+async function instanceAction(serverName: string, action: 'start' | 'stop' | 'restart') {
     const fetchInstanceCommand = new DescribeInstancesCommand({
         Filters: [
             {
@@ -76,9 +82,9 @@ async function instanceAction(serverName: string, action: 'start' | 'stop') {
     });
 
     const data = await ec2Client.send(fetchInstanceCommand)
-    const instance = data?.Reservations && data.Reservations[0].Instances
+    const instance = data?.Reservations && data.Reservations[0].Instances;
     if (!instance || !instance[0].InstanceId) {
-        return httpResponse({ message: 'Targeted instance not found' }, 404)
+        return httpResponse({ message: 'Targeted instance not found' }, 404);
     }
 
     const commandArgs = {
@@ -90,12 +96,15 @@ async function instanceAction(serverName: string, action: 'start' | 'stop') {
     let response;
     if (action === 'start') {
         const command = new StartInstancesCommand(commandArgs);
-        response = (await ec2Client.send(command)).StartingInstances
+        response = (await ec2Client.send(command)).StartingInstances;
     } else if (action === 'stop') {
         const command = new StopInstancesCommand(commandArgs);
-        response = (await ec2Client.send(command)).StoppingInstances
+        response = (await ec2Client.send(command)).StoppingInstances;
+    } else if (action === 'restart') {
+        const command = new RebootInstancesCommand(commandArgs);
+        response = (await ec2Client.send(command));
     } else {
-        return httpResponse({ message: 'Invalid action.' }, 400)
+        return httpResponse({ message: 'Invalid action.' }, 400);
     }
-    return httpResponse({ message: 'Success', response })
+    return httpResponse({ message: 'Success', response });
 }
