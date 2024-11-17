@@ -5,8 +5,10 @@ import { FactorioServer } from "./factorio"
 export interface GameserverStatus {
     state: 'installing' | 'starting' | 'running' | 'shutting-down' | 'stopped' | 'status-check-fail' 
     launchTime: string
-    playerCount?: number,
-    maxPlayerCount?: number
+    playerCount?: number
+    addtionalServerStats?: {
+        [key: string]: any
+    }
 }
 
 

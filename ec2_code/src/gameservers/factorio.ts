@@ -3,11 +3,20 @@ import { Gameserver, GameserverStatus } from ".";
 import { InstanceMetadata } from "../utils/instanceMetadata";
 import logger from "../utils/logger";
 import { execSync } from "child_process";
+import crypto from 'crypto';
+import { Rcon } from "rcon-client";
+
 
 interface FactorioServerData {
     version?: string
 }
 
+
+const rconConfig = {
+    host: 'localhost',
+    port: 27015,
+    password: crypto.randomUUID() // Only the server needs to know / will use the RCON client.
+}
 
 export class FactorioServer implements Gameserver {
     status: GameserverStatus
@@ -102,9 +111,10 @@ export class FactorioServer implements Gameserver {
 
             const serverVersion = this.getServerVersion(factorioExecPath);
             this.factorioServerData.version = serverVersion;
+            this.status.addtionalServerStats = this.factorioServerData; // @TODO: clean this up later.
             logger.info('Starting Factorio server...', { serverVersion });
 
-            const factorioStartCmd = `${factorioExecPath} --start-server-load-latest --rcon-port 27015 --rcon-password "sdfgsfdgsdfg" 2>&1 | tee -a ${factorioLogPath}/factorio-${this.status.launchTime}.log`;
+            const factorioStartCmd = `${factorioExecPath} --start-server-load-latest --rcon-port ${rconConfig.port} --rcon-password "${rconConfig.password}" 2>&1 | tee -a ${factorioLogPath}/factorio-${this.status.launchTime}.log`;
             execSync(`screen -S factorio -d -m bash -c '${factorioStartCmd}'`);
 
             logger.info('Factorio server started in screen session.');
@@ -149,12 +159,37 @@ export class FactorioServer implements Gameserver {
     }
 
 
-    getStatus() {
-        return {} as any
+    async getStatus() {
+        try {
+            logger.info('Fetching factorio server status via RCON...');
+            const rcon = await Rcon.connect(rconConfig)
+
+            const rconResponse = await rcon.send('/players online');
+            logger.info('Players online command response', { rconResponse });
+            const playerCount = rconResponse.match(/Online players \((\d+)\)/)?.[1];
+
+            if (playerCount) {
+                this.status.playerCount = parseInt(playerCount);
+            }
+
+            // @TODO: Future potential additional config to fetch
+            // /config get max-players
+            // /config get name
+            // /config get description
+            // /config get tags
+
+            rcon.end();
+            logger.info('Current factorio server status', this.status);
+            return this.status;
+
+        } catch (error) {
+            logger.error('Error while fetching status via RCON:', { error: error });
+            throw error;
+        }
     }
 
 
-    shutDown() {
+    async shutDown() {
         this.status.state = 'shutting-down'
         try {
             logger.info('Shutting down factorio server.');
@@ -162,6 +197,5 @@ export class FactorioServer implements Gameserver {
         } catch (error: any) {
             logger.error('Error shutting factorio server down gracefully.', { errorMessage: error.message, stdError: error?.stderr.toString() });
         }
-        return {} as any
     }
 }
