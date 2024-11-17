@@ -77,5 +77,4 @@ echo "Checking status of $SERVICE_NAME..."
 systemctl status "$SERVICE_NAME" --no-pager
 
 
-
 echo '====================================== EC2 INSTALL COMPLETE =========================================='

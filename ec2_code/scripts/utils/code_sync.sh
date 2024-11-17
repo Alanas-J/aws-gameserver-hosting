@@ -6,8 +6,8 @@ echo '== Starting s3 sync... =='
 aws s3 sync s3://gameserverstack-s3storagebucketcf59ebf7-hidmmd95ycsc/ec2_code/ $GAMESERVER_CODE_DIR/
 shopt -s globstar; # <---- allows for /**/ to be used in paths
 chmod +x $GAMESERVER_CODE_DIR/**/*.sh; # Adding execution permissions for every shell file
-echo '== Sync complete! =='
+echo '== S3 sync complete =='
 
 echo '== Installing node dependencies... =='
 npm --prefix $GAMESERVER_CODE_DIR install --omit=dev --verbose
-echo '== Complete! =='
+echo '== Code sync script complete! =='
