@@ -73,7 +73,9 @@ export class ServerMasterLambdaConstruct extends Construct {
         this.functionUrl = this.lambdaFunction.addFunctionUrl({
             authType: FunctionUrlAuthType.NONE,
             invokeMode: InvokeMode.BUFFERED,
-            // CORS rules can be implemented here
+            cors: {
+                allowedOrigins: ['*']
+            }
         })
         new CfnOutput(this, 'FunctionUrl', { value: this.functionUrl.url })
 
