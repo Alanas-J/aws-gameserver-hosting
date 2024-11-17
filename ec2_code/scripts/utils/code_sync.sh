@@ -9,5 +9,5 @@ chmod +x $GAMESERVER_CODE_DIR/**/*.sh; # Adding execution permissions for every 
 echo '== Sync complete! =='
 
 echo '== Installing node dependencies... =='
-npm --prefix $GAMESERVER_CODE_DIR install --production --verbose
+npm --prefix $GAMESERVER_CODE_DIR install --omit=dev --verbose
 echo '== Complete! =='
