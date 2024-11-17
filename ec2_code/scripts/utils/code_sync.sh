@@ -8,7 +8,6 @@ shopt -s globstar; # <---- allows for /**/ to be used in paths
 chmod +x $GAMESERVER_CODE_DIR/**/*.sh; # Adding execution permissions for every shell file
 echo '== Sync complete! =='
 
-echo '== Building node app... =='
-npm --prefix $GAMESERVER_CODE_DIR install --verbose
-npm --prefix $GAMESERVER_CODE_DIR run build --verbose
+echo '== Installing node dependencies... =='
+npm --prefix $GAMESERVER_CODE_DIR install --production --verbose
 echo '== Complete! =='
