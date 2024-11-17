@@ -8,6 +8,11 @@ shopt -s globstar; # <---- allows for /**/ to be used in paths
 chmod +x $GAMESERVER_CODE_DIR/**/*.sh; # Adding execution permissions for every shell file
 echo '== S3 sync complete =='
 
-echo '== Installing node dependencies... =='
-npm --prefix $GAMESERVER_CODE_DIR install --omit=dev --verbose
+# =====================================
+# Swapped to using a code bundle instead (NPM installs were throttled for some reason :/)
+# Bundled code may cause more issues
+# =====================================
+# echo '== Installing node dependencies... =='
+# npm --prefix $GAMESERVER_CODE_DIR install --omit=dev --verbose
+
 echo '== Code sync script complete! =='
