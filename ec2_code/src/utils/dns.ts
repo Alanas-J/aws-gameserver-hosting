@@ -32,7 +32,7 @@ export async function setDNSRecord(action: 'UPSERT' | 'DELETE', instanceMetadata
 
     try {
         logger.info(`Sending ${action} action for ${fullServerName} to Route 53.`);
-        const response = await route53Client.changeResourceRecordSets(params);
+        const response = await route53Client.changeResourceRecordSets(params).promise();
         logger.info(`${action} success for ${fullServerName} to Route 53.`, { response });
         return response;
 

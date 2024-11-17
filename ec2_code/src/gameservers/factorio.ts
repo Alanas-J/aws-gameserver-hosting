@@ -100,7 +100,7 @@ export class FactorioServer implements Gameserver {
                 try {
                     logger.info("Factorio saves directory doesn't exist; creating first save...");
 
-                    const commmand = `${factorioExecPath} --create ${factorioSavesPath}/initial-save.zip | tee -a ${factorioLogPath}/factorio-${this.status.launchTime}.log`;
+                    const commmand = `${factorioExecPath} --create ${factorioSavesPath}/init.zip | tee -a ${factorioLogPath}/factorio-${this.status.launchTime}.log`;
                     execSync(commmand);
                     logger.info(`Initial save created...`);
                 } catch (error: any) {
@@ -133,8 +133,12 @@ export class FactorioServer implements Gameserver {
         this.crashCheckInterval = setInterval(() => {
             try {
                 const output = execSync('screen -ls | grep "factorio" || true').toString();
-
-                logger.info("Isalive check TEST", { output }); // @TODO Remove this specific log.
+                if (!output) {
+                    logger.warn("Factorio server process is stopped/crashed!");
+                    this.status.state = 'stopped';
+                } else {
+                    this.status.state = 'running';
+                }
             } catch (error: any) {
                 logger.error('Error performing server crash check', { errorMessage: error.message, stdError: error?.stderr.toString() });
             }
