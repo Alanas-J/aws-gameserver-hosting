@@ -74,7 +74,8 @@ export class ServerMasterLambdaConstruct extends Construct {
             authType: FunctionUrlAuthType.NONE,
             invokeMode: InvokeMode.BUFFERED,
             cors: {
-                allowedOrigins: ['*']
+                allowedOrigins: ['*'],
+                allowedHeaders: ['*']
             }
         })
         new CfnOutput(this, 'FunctionUrl', { value: this.functionUrl.url })

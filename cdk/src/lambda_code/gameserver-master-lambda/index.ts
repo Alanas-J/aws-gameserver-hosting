@@ -14,7 +14,7 @@ export async function handler (event: LambdaFunctionUrlEvent) {
             
             case 'instance': 
                 if (['start', 'stop', 'restart'].includes(path[3])) {
-                    if (event.requestContext.headers.Authorization === process.env.AUTH_PASSWORD) {
+                    if (event.headers.authorization === process.env.AUTH_PASSWORD) {
                         return instanceAction(path[2], path[3] as any);
 
                     } else {

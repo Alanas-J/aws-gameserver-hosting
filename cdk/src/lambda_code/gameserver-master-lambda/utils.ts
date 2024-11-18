@@ -5,10 +5,10 @@ export interface LambdaFunctionUrlEvent { // A map of all used variables, a dedi
             method: string, // GET, POST etc.
             path: string
         }
-        headers: { [key: string]: string }
-        queryStringParameters?: { [key: string]: string | null } | null;
+        queryStringParameters?: { [key: string]: string | null } | null
         body: string | null;
     }
+    headers: { [key: string]: string }
 }
 
 export async function httpResponse (body: any, statusCode=200, headers={ "Content-Type": "text/json" }) {
