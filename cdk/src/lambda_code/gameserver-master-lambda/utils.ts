@@ -1,3 +1,4 @@
+import { EC2Client } from "@aws-sdk/client-ec2";
 
 export interface LambdaFunctionUrlEvent { // A map of all used variables, a dedicated type doesn't exist.
     requestContext: {
@@ -25,3 +26,6 @@ export function RequestTimeoutSignal (time: number) {
 	setTimeout(() => controller.abort(), time * 1000);
 	return controller.signal;
 };
+
+// To only have one instance of the EC2Client
+export const ec2Client = new EC2Client();
