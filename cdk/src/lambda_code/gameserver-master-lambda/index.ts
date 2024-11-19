@@ -9,13 +9,13 @@ export async function handler (event: LambdaFunctionUrlEvent) {
     try {
         switch (path[1]) {
             case 'instances':
-                const instanceDetails = await fetchAllGameserverInstances();
+                const instanceDetails = await getAllGameserverInstanceStatus();
                 return httpResponse({ instanceDetails });
             
             case 'instance': 
                 if (['start', 'stop', 'restart'].includes(path[3])) {
                     if (event.headers.authorization === process.env.AUTH_PASSWORD) {
-                        return instanceAction(path[2], path[3] as any);
+                        return sendInstanceAction(path[2], path[3] as any);
 
                     } else {
                         return httpResponse({ message: 'Unauthorized.' }, 401);
@@ -33,7 +33,7 @@ export async function handler (event: LambdaFunctionUrlEvent) {
 };
 
 
-async function fetchAllGameserverInstances() {
+async function getAllGameserverInstanceStatus() {
     const stackInstances = []
 
     const fetchAllInstancesCommand = new DescribeInstancesCommand({
@@ -69,7 +69,7 @@ async function fetchAllGameserverInstances() {
 }
 
 
-async function instanceAction(serverName: string, action: 'start' | 'stop' | 'restart') {
+async function sendInstanceAction(serverName: string, action: 'start' | 'stop' | 'restart') {
     const fetchInstanceCommand = new DescribeInstancesCommand({
         Filters: [
             {
@@ -144,10 +144,21 @@ async function instanceStatus(serverName: string) {
         launchTime: instance.LaunchTime
     }
 
-    const response = await fetch(`http://${instanceDetails.publicIp}:8080/status`, {
-        signal: RequestTimeoutSignal(5000)
-    });
-    const gameserverStatus = await response.json();
-
-    return httpResponse({ message: 'Success', instanceDetails, gameserverStatus });
+    // Only hit /status of gameserver if instance is running.
+    if (instanceDetails.state?.Name === 'running') {
+        try {
+            console.log('Fetching gameserver status')
+            const response = await fetch(`http://${instanceDetails.publicIp}:8080/status`, {
+                signal: RequestTimeoutSignal(5000)
+            });
+            const gameserverStatus = await response.json();
+            return httpResponse({ instanceDetails, gameserverStatus });
+        } catch (error) {
+            console.error('Gameserver status fetch failed', { error: error });
+        }
+    }
+    
+    return httpResponse( {
+        instanceDetails
+    })
 }

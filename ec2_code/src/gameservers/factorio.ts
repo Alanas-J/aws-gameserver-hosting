@@ -7,11 +7,6 @@ import crypto from 'crypto';
 import { Rcon } from "rcon-client";
 
 
-interface FactorioServerData {
-    version?: string
-}
-
-
 const rconConfig = {
     host: 'localhost',
     port: 27015,
@@ -20,7 +15,6 @@ const rconConfig = {
 
 export class FactorioServer implements Gameserver {
     status: GameserverStatus
-    factorioServerData: FactorioServerData = {}
     crashCheckInterval: NodeJS.Timeout
 
     constructor(instanceMeta: InstanceMetadata) {
@@ -110,8 +104,7 @@ export class FactorioServer implements Gameserver {
             }
 
             const serverVersion = this.getServerVersion(factorioExecPath);
-            this.factorioServerData.version = serverVersion;
-            this.status.addtionalServerStats = this.factorioServerData; // @TODO: clean this up later.
+            this.status.serverVersion = serverVersion;
             logger.info('Starting Factorio server...', { serverVersion });
 
             const factorioStartCmd = `${factorioExecPath} --start-server-load-latest --rcon-port ${rconConfig.port} --rcon-password "${rconConfig.password}" 2>&1 | tee -a ${factorioLogPath}/factorio-${this.status.launchTime}.log`;

@@ -6,7 +6,8 @@ export interface GameserverStatus {
     state: 'installing' | 'starting' | 'running' | 'shutting-down' | 'stopped' | 'status-check-fail' 
     launchTime: string
     playerCount?: number
-    addtionalServerStats?: {
+    serverVersion?: string
+    additionalServerStats?: {
         [key: string]: any
     }
 }
