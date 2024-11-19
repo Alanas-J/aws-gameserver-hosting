@@ -8,7 +8,15 @@ export interface InstanceStatus {
     gameserverStatus?: any /* This is defined in the gameserver code and is just relayed. */
 }
 
+// simple cache to prevent spamming. (will need to rework into generic decorator or similar)
+let cachedInstanceStatus: InstanceStatus | undefined;
+let cacheTime: Date | undefined;
+
 export async function getInstanceStatus(serverName: string) {
+    if (cacheTime && (cacheTime.getTime() + 2000) < Date.now()) {
+        if (cachedInstanceStatus) return cachedInstanceStatus;
+    }
+
     const fetchInstanceCommand = new DescribeInstancesCommand({
         Filters: [
             {
@@ -29,6 +37,9 @@ export async function getInstanceStatus(serverName: string) {
     }
     const instance = instances[0];
     const instanceDetails = getInstanceDetailsFromInstance(instance)
+    const instanceStatus: InstanceStatus = {
+        instanceDetails
+    }
 
     // Only hit /status of gameserver if instance is running.
     if (instanceDetails.state?.Name === 'running') {
@@ -37,14 +48,13 @@ export async function getInstanceStatus(serverName: string) {
             const response = await fetch(`http://${instanceDetails.publicIp}:8080/status`, {
                 signal: RequestTimeoutSignal(5000)
             });
-            const gameserverStatus = await response.json();
-            return httpResponse({ instanceDetails, gameserverStatus });
+            instanceStatus.gameserverStatus = await response.json();
         } catch (error) {
             console.error('Gameserver status fetch failed', { error: error });
         }
     }
-    
-    return httpResponse({
-        instanceDetails
-    })
+
+    cachedInstanceStatus = instanceStatus;
+    cacheTime = new Date();
+    return httpResponse(instanceStatus)
 }

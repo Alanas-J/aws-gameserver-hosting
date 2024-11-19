@@ -14,7 +14,15 @@ export interface InstanceDetails {
 }
 
 
+// simple cache to prevent spamming. (will need to rework into generic decorator or similar)
+let cachedInstanceDetails: InstanceDetails[] | undefined;
+let cacheTime: Date | undefined;
+
 export async function getAllInstanceDetails(): Promise<InstanceDetails[]> {
+    if (cacheTime && (cacheTime.getTime() + 2000) < Date.now()) {
+        if (cachedInstanceDetails) return cachedInstanceDetails;
+    }
+
     const stackInstances = [];
 
     const fetchAllInstancesCommand = new DescribeInstancesCommand({
@@ -35,9 +43,11 @@ export async function getAllInstanceDetails(): Promise<InstanceDetails[]> {
         }
     }
 
-    return stackInstances.map(getInstanceDetailsFromInstance)
+    const instanceDetails = stackInstances.map(getInstanceDetailsFromInstance);
+    cachedInstanceDetails = instanceDetails;
+    cacheTime = new Date();
+    return instanceDetails; 
 }
-
 
 export function getInstanceDetailsFromInstance(instance: Instance) {
     return {
