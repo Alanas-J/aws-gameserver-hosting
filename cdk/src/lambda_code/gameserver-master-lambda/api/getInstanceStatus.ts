@@ -1,4 +1,4 @@
-import { DescribeInstancesCommand, EC2Client } from "@aws-sdk/client-ec2";
+import { DescribeInstancesCommand } from "@aws-sdk/client-ec2";
 import { ec2Client, httpResponse, RequestTimeoutSignal } from "../utils";
 import { getInstanceDetailsFromInstance, InstanceDetails } from "./getAllInstanceDetails";
 
@@ -13,7 +13,10 @@ let cachedInstanceStatus: InstanceStatus | undefined;
 let cacheTime: Date | undefined;
 
 export async function getInstanceStatus(serverName: string) {
-    if (cacheTime && (cacheTime.getTime() + 2000) < Date.now()) {
+    if (cacheTime && (cacheTime.getTime() + 2000) > Date.now()) {
+        console.log('Returning cached response', 
+            { cachedInstanceStatus, currentTime: Date.now(), cacheTime: cacheTime.getTime() }
+        )
         if (cachedInstanceStatus) return cachedInstanceStatus;
     }
 

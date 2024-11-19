@@ -19,7 +19,10 @@ let cachedInstanceDetails: InstanceDetails[] | undefined;
 let cacheTime: Date | undefined;
 
 export async function getAllInstanceDetails(): Promise<InstanceDetails[]> {
-    if (cacheTime && (cacheTime.getTime() + 2000) < Date.now()) {
+    if (cacheTime && (cacheTime.getTime() + 2000) > Date.now()) {
+        console.log('Returning cached response', 
+            { cachedInstanceDetails, currentTime: Date.now(), cacheTime: cacheTime.getTime() }
+        )
         if (cachedInstanceDetails) return cachedInstanceDetails;
     }
 
