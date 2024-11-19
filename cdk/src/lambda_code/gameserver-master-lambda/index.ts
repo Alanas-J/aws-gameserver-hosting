@@ -27,7 +27,7 @@ export async function handler (event: LambdaFunctionUrlEvent) {
                         }
 
                     case 'status':
-                        return getInstanceStatus(instanceName);
+                        return await getInstanceStatus(instanceName);
                 }
             default:
                 return httpResponse({ message: 'Invalid path.' }, 400);

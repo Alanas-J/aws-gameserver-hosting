@@ -1,8 +1,12 @@
 import { DescribeInstancesCommand, EC2Client } from "@aws-sdk/client-ec2";
-import { httpResponse, RequestTimeoutSignal } from "../utils";
-import { getInstanceDetailsFromInstance } from "./getAllInstanceDetails";
-const ec2Client = new EC2Client();
+import { ec2Client, httpResponse, RequestTimeoutSignal } from "../utils";
+import { getInstanceDetailsFromInstance, InstanceDetails } from "./getAllInstanceDetails";
 
+
+export interface InstanceStatus {
+    instanceDetails: InstanceDetails
+    gameserverStatus?: any /* This is defined in the gameserver code and is just relayed. */
+}
 
 export async function getInstanceStatus(serverName: string) {
     const fetchInstanceCommand = new DescribeInstancesCommand({
@@ -24,7 +28,6 @@ export async function getInstanceStatus(serverName: string) {
         return httpResponse({ message: 'Targeted instance not found' }, 404);
     }
     const instance = instances[0];
-
     const instanceDetails = getInstanceDetailsFromInstance(instance)
 
     // Only hit /status of gameserver if instance is running.
