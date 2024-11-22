@@ -10,7 +10,6 @@ import path = require("path");
 import { stackConfig } from "../../stack-config";
 import { HttpOrigin } from "aws-cdk-lib/aws-cloudfront-origins";
 import { ARecord, PublicHostedZone, RecordTarget } from "aws-cdk-lib/aws-route53";
-import { CLOUDFRONT_SSL_CERTIFICATE_ARN, ROUTE53_ZONE_ID } from "../../personal_config";
 import { CloudFrontTarget } from "aws-cdk-lib/aws-route53-targets";
 
 
@@ -39,6 +38,7 @@ export class ServerMasterLambdaConstruct extends Construct {
             actions: [
                 'ec2:StartInstances',
                 'ec2:StopInstances',
+                'ec2:RebootInstances',
             ],
             resources: ['*'],
             conditions: {
@@ -62,14 +62,21 @@ export class ServerMasterLambdaConstruct extends Construct {
                     "--packages": "bundle",
                 },
             },
-            role: this.lambdaRole
-            // reservedConcurrentExecutions: 1 // @TODO: disabled since my account is at 10 concurrency so I can't reserve/limit this lambda 
+            role: this.lambdaRole,
+            environment: {
+                AUTH_PASSWORD: stackConfig.LAMBDA_PASSWORD
+            }
+            // reservedConcurrentExecutions: 1 // @TODO: disabled since my account is at 10 concurrency so I can't reserve/limit this lambda
+
         })
 
         this.functionUrl = this.lambdaFunction.addFunctionUrl({
             authType: FunctionUrlAuthType.NONE,
             invokeMode: InvokeMode.BUFFERED,
-            // CORS rules can be implemented here
+            cors: {
+                allowedOrigins: ['*'],
+                allowedHeaders: ['*']
+            }
         })
         new CfnOutput(this, 'FunctionUrl', { value: this.functionUrl.url })
 
@@ -86,7 +93,7 @@ export class ServerMasterLambdaConstruct extends Construct {
         // A Cloudfront distrubution is the cheapest way
         // API Gateway HTTP is $1.11 per month past the first year.
         const distribution = new Distribution(this, 'LambdaCloudfront', {
-            certificate: Certificate.fromCertificateArn(this, 'DomainCertLookup', CLOUDFRONT_SSL_CERTIFICATE_ARN),
+            certificate: Certificate.fromCertificateArn(this, 'DomainCertLookup', stackConfig.LAMBDA_VANITY_URL.CLOUDFRONT_SSL_CERTIFICATE_ARN),
             domainNames: [`${stackConfig.LAMBDA_VANITY_URL.SUBDOMAIN}.${stackConfig.DOMAIN_NAME}`],
             minimumProtocolVersion: SecurityPolicyProtocol.TLS_V1_1_2016,
             errorResponses: [
@@ -112,7 +119,7 @@ export class ServerMasterLambdaConstruct extends Construct {
             comment: '(Optional) Gameserver Lambda Distro to allow subdomain mapping.'
         });
     
-        const publicHostedZone = PublicHostedZone.fromHostedZoneAttributes(this, 'DomainZoneLookup', { hostedZoneId: ROUTE53_ZONE_ID, zoneName: stackConfig.DOMAIN_NAME})
+        const publicHostedZone = PublicHostedZone.fromHostedZoneAttributes(this, 'DomainZoneLookup', { hostedZoneId: stackConfig.ROUTE53_ZONE_ID, zoneName: stackConfig.DOMAIN_NAME})
         this.lambdaARecord = new ARecord(this, 'LambdaAliasRecord', {
             zone: publicHostedZone,
             recordName: `${stackConfig.LAMBDA_VANITY_URL.SUBDOMAIN}.${stackConfig.DOMAIN_NAME}`,

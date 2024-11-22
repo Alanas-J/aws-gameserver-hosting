@@ -2,7 +2,7 @@ import fastify from 'fastify';
 import logger from './utils/logger';
 import { setDNSRecord } from './utils/dns';
 import { getInstanceMetadata } from './utils/instanceMetadata';
-import { Gameserver, startGameserver } from './gameservers';
+import { Gameserver, GameserverStatus, startGameserver } from './gameservers';
 
 logger.info('Node.js Application started');
 
@@ -14,19 +14,36 @@ server.get('/ping', async (request, reply) => {
     return 'pong\n';
 });
 
+// Basic caching to prevent endpoint abuse.
+const CACHE_TTL = 1000;
+let cachedStatus: GameserverStatus | undefined;
+let cacheExpiryTime: Date | undefined;
+
 server.get('/status', async (request, reply) => {
     logger.info(`Status endpoint was hit!`);
+    if (cachedStatus && cacheExpiryTime && cacheExpiryTime.getTime() > Date.now()) {
+        logger.info(`Returned cached status`, { cachedStatus });
+        return cachedStatus;
+    }
+
     if (currentGameServer) {
-        // @TODO: implement caching logic.
-        const status = await currentGameServer.getStatus();
-        logger.info('Server status:', { status });
-        
-        return status;
-    } 
-    
-    logger.warn('Gameserver not running.')
-    reply.status(500);
-    return { message: 'Server not running.' }
+        try {
+            const status = await currentGameServer.getStatus();
+            logger.info('Server status:', { status });
+
+            cachedStatus = status;
+            cacheExpiryTime = new Date(Date.now() + CACHE_TTL);
+            return status;
+        } catch (error) {
+            logger.info('Error getting server status:', { error });
+            reply.status(500);
+            return { message: 'Failure to get server status.' }
+        }
+    } else {
+        logger.warn('Gameserver not running.')
+        reply.status(500);
+        reply.send({ message: 'Gameserver not running yet.' })
+    }
 });
 
 
@@ -54,7 +71,7 @@ async function gracefulShutdown() {
 
     try {
         await setDNSRecord('DELETE', await getInstanceMetadata())
-        if (currentGameServer) await currentGameServer.shutDown();
+        // if (currentGameServer) await currentGameServer.shutDown(); @TODO: Will be handled outside of SIGTERM/SIGINT handling.
         await server.close()
 
     } catch (error) {

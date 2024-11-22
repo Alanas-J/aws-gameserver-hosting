@@ -38,7 +38,7 @@ amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c file:$GAMESERVER_CODE_D
 
 
 echo '5: Server systemd configuration... ==================================================================='
-SERVICE_NAME="gameserver-node-http-server"
+SERVICE_NAME="gameserver"
 
 echo "Creating systemd service file for $SERVICE_NAME..."
 bash -c "cat <<EOL > /etc/systemd/system/$SERVICE_NAME.service
@@ -48,17 +48,17 @@ After=network.target
 
 [Service]
 ExecStartPre=/bin/bash -c \"$GAMESERVER_CODE_DIR/scripts/utils/code_sync.sh >> $GAMESERVER_VAR_DIR/logs/code_sync.log 2>&1\"
-ExecStart=/usr/bin/node $GAMESERVER_CODE_DIR/dist/index.js
+ExecStart=/usr/bin/node $GAMESERVER_CODE_DIR/dist/bundle.js
 WorkingDirectory=$GAMESERVER_CODE_DIR
 Restart=always
 RestartSec=10 
-TimeoutStartSec=300
+TimeoutStartSec=3600
 User=$GAMESERVER_USER
 Environment=PATH=/usr/bin:/usr/local/bin
 Environment=GAMESERVER_CODE_DIR=$GAMESERVER_CODE_DIR
 Environment=GAMESERVER_VAR_DIR=$GAMESERVER_VAR_DIR
 Environment=GAMESERVER_SERVER_FILES_DIR=$GAMESERVER_SERVER_FILES_DIR
-TimeoutStopSec=60 
+TimeoutStopSec=120
 
 [Install]
 WantedBy=multi-user.target
@@ -75,7 +75,6 @@ systemctl start "$SERVICE_NAME"
 
 echo "Checking status of $SERVICE_NAME..."
 systemctl status "$SERVICE_NAME" --no-pager
-
 
 
 echo '====================================== EC2 INSTALL COMPLETE =========================================='

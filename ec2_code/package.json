@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
+    "bundle": "esbuild src/index.ts --bundle --platform=node --outfile=dist/bundle.js",
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "ts-node src/index.ts"
@@ -10,14 +11,15 @@
   "keywords": [],
   "author": "",
   "dependencies": {
-    "@aws-sdk/client-ec2": "^3.694.0",
-    "@aws-sdk/client-route-53": "^3.693.0",
+    "aws-sdk": "^2.1692.0",
     "axios": "^1.7.7",
     "fastify": "^5.0.0",
+    "rcon-client": "^4.2.5",
     "winston": "^3.16.0"
   },
   "devDependencies": {
     "@types/node": "^22.8.4",
+    "esbuild": "^0.24.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.6.3"
   }

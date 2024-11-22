@@ -7,7 +7,7 @@
     "install:cdk": "cd ./cdk && npm i",
     "install:ec2_code": "cd ./ec2_code && npm i",
     "install": "npm run install:cdk && npm run install:ec2_code",
-    "deploy": "npm --prefix ./ec2_code run build && cd ./cdk && cdk deploy"
+    "deploy": "npm --prefix ./ec2_code run bundle && cd ./cdk && cdk deploy"
   },
-  "author": "Alanas Jakubauskas"
+  "author": "Alanas J"
 }
