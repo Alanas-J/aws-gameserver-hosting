@@ -2,23 +2,22 @@ import { DescribeInstancesCommand } from "@aws-sdk/client-ec2";
 import { ec2Client, httpResponse, RequestTimeoutSignal } from "../utils";
 import { getInstanceDetailsFromInstance, InstanceDetails } from "./getAllInstanceDetails";
 
-
 export interface InstanceStatus {
     instanceDetails: InstanceDetails
     gameserverStatus?: any /* This is defined in the gameserver code and is just relayed. */
 }
-
 // simple cache to prevent spamming. (will need to rework into generic decorator or similar)
-let cachedInstanceStatus: InstanceStatus | undefined;
-let cacheTime: Date | undefined;
+interface InstanceStatusCache {
+    [key: string]: { instanceStatus: InstanceStatus, expiryTime: Date }
+}
+const CACHE_TTL = 2000;
+const statusCache: InstanceStatusCache = {};
+
 
 export async function getInstanceStatus(serverName: string) {
-    if (cacheTime && (cacheTime.getTime() + 2000) > Date.now()) {
-        console.log('Returning cached response', 
-            { cachedInstanceStatus, currentTime: Date.now(), cacheTime: cacheTime.getTime() }
-        )
-        if (cachedInstanceStatus) return cachedInstanceStatus;
-    }
+    if (statusCache[serverName] && statusCache[serverName].expiryTime.getTime() > Date.now()) {
+        return  statusCache[serverName].instanceStatus;
+    } 
 
     const fetchInstanceCommand = new DescribeInstancesCommand({
         Filters: [
@@ -57,7 +56,6 @@ export async function getInstanceStatus(serverName: string) {
         }
     }
 
-    cachedInstanceStatus = instanceStatus;
-    cacheTime = new Date();
+    statusCache[serverName] = { instanceStatus, expiryTime: new Date(Date.now() + CACHE_TTL) };
     return httpResponse(instanceStatus)
 }
