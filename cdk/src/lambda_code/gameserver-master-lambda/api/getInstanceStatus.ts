@@ -16,6 +16,14 @@ const statusCache: InstanceStatusCache = {};
 
 export async function getInstanceStatus(serverName: string) {
     if (statusCache[serverName] && statusCache[serverName].expiryTime.getTime() > Date.now()) {
+        console.log('Returning cached response}', 
+            { 
+                serverName,
+                cachedInstanceDetails: statusCache[serverName], 
+                currentTime: Date.now(), 
+                cacheTime: statusCache[serverName].expiryTime.getTime() 
+            }
+        )
         return  statusCache[serverName].instanceStatus;
     } 
 

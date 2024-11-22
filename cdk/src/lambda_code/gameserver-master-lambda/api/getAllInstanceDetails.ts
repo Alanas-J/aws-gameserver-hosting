@@ -16,12 +16,13 @@ export interface InstanceDetails {
 
 // simple cache to prevent spamming. (will need to rework into generic decorator or similar)
 let cachedInstanceDetails: InstanceDetails[] | undefined;
-let cacheTime: Date | undefined;
+let cacheExpiryTime: Date | undefined;
+const CACHE_TTL = 2000;
 
 export async function getAllInstanceDetails(): Promise<InstanceDetails[]> {
-    if (cacheTime && (cacheTime.getTime() + 2000) > Date.now()) {
+    if (cachedInstanceDetails && cacheExpiryTime && cacheExpiryTime.getTime() > Date.now()) {
         console.log('Returning cached response', 
-            { cachedInstanceDetails, currentTime: Date.now(), cacheTime: cacheTime.getTime() }
+            { cachedInstanceDetails, currentTime: Date.now(), cacheTime: cacheExpiryTime.getTime() }
         )
         if (cachedInstanceDetails) return cachedInstanceDetails;
     }
@@ -48,7 +49,7 @@ export async function getAllInstanceDetails(): Promise<InstanceDetails[]> {
 
     const instanceDetails = stackInstances.map(getInstanceDetailsFromInstance);
     cachedInstanceDetails = instanceDetails;
-    cacheTime = new Date();
+    cacheExpiryTime = new Date(Date.now() + CACHE_TTL);
     return instanceDetails; 
 }
 

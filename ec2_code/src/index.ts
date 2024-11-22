@@ -22,6 +22,7 @@ let cacheExpiryTime: Date | undefined;
 server.get('/status', async (request, reply) => {
     logger.info(`Status endpoint was hit!`);
     if (cachedStatus && cacheExpiryTime && cacheExpiryTime.getTime() > Date.now()) {
+        logger.info(`Returned cached status`, { cachedStatus });
         return cachedStatus;
     }
 
