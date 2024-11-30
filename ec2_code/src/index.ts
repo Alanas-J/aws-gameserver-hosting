@@ -58,6 +58,12 @@ server.listen({ port: 8080, host: '0.0.0.0' }, async (error, address) => {
         const instanceMetadata = await getInstanceMetadata();
         currentGameServer = startGameserver(instanceMetadata);
         setDNSRecord('UPSERT', instanceMetadata);
+
+        if (currentGameServer) {
+            setTimeout(() => {
+                startServerIdleCheck();
+            }, 5000);
+        }
     } catch (error) {
         logger.error('Failed to start the game server!', { error })
     }
@@ -80,4 +86,9 @@ async function gracefulShutdown() {
     }
 
     process.exit(0);
+}
+
+
+function startServerIdleCheck () {
+
 }

@@ -16,6 +16,7 @@ const rconConfig = {
 export class FactorioServer implements Gameserver {
     status: GameserverStatus
     crashCheckInterval: NodeJS.Timeout
+    started = false
 
     constructor(instanceMeta: InstanceMetadata) {
         console.log(instanceMeta);
@@ -157,32 +158,34 @@ export class FactorioServer implements Gameserver {
 
 
     async getStatus() {
-        try {
-            logger.info('Fetching factorio server status via RCON...');
-            const rcon = await Rcon.connect(rconConfig)
-
-            const rconResponse = await rcon.send('/players online');
-            logger.info('Players online command response', { rconResponse });
-            const playerCount = rconResponse.match(/Online players \((\d+)\)/)?.[1];
-
-            if (playerCount) {
-                this.status.playerCount = parseInt(playerCount);
+        if (['running', 'status-check-error'].includes(this.status.state)) {
+            try {
+                logger.info('Fetching factorio server status via RCON...');
+                const rcon = await Rcon.connect(rconConfig)
+    
+                const rconResponse = await rcon.send('/players online');
+                logger.info('Players online command response', { rconResponse });
+                const playerCount = rconResponse.match(/Online players \((\d+)\)/)?.[1];
+    
+                if (playerCount) {
+                    this.status.playerCount = parseInt(playerCount);
+                }
+    
+                // @TODO: Future potential additional config to fetch
+                // /config get max-players
+                // /config get name
+                // /config get description
+                // /config get tags
+    
+                rcon.end();
+                this.status.state = 'running';
+                logger.info('Current factorio server status', { status: this.status });
+            } catch (error) {
+                logger.error('Error while fetching status via RCON:', { error: error, status: this.status  });
+                this.status.state = 'status-check-error';
             }
-
-            // @TODO: Future potential additional config to fetch
-            // /config get max-players
-            // /config get name
-            // /config get description
-            // /config get tags
-
-            rcon.end();
-            logger.info('Current factorio server status', this.status);
-            return this.status;
-
-        } catch (error) {
-            logger.error('Error while fetching status via RCON:', { error: error });
-            throw error;
         }
+        return this.status;
     }
 
 
