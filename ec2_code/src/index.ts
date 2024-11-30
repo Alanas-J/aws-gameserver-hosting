@@ -3,6 +3,7 @@ import logger from './utils/logger';
 import { setDNSRecord } from './utils/dns';
 import { getInstanceMetadata } from './utils/instanceMetadata';
 import { Gameserver, GameserverStatus, startGameserver } from './gameservers';
+import { startServerIdleCheck } from './utils/idle-server-shutdown';
 
 logger.info('Node.js Application started');
 
@@ -61,9 +62,10 @@ server.listen({ port: 8080, host: '0.0.0.0' }, async (error, address) => {
 
         if (currentGameServer) {
             setTimeout(() => {
-                startServerIdleCheck();
+                startServerIdleCheck(currentGameServer as Gameserver);
             }, 5000);
         }
+        
     } catch (error) {
         logger.error('Failed to start the game server!', { error })
     }
@@ -86,9 +88,4 @@ async function gracefulShutdown() {
     }
 
     process.exit(0);
-}
-
-
-function startServerIdleCheck () {
-
 }
