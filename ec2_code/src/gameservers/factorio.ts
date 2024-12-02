@@ -116,7 +116,7 @@ export class FactorioServer implements Gameserver {
 
         } catch (error: any) {
             logger.error('Error starting Factorio server in screen', { errorMessage: error.message, stdError: error?.stderr.toString() });
-            this.status.state = 'stopped';
+            this.status.state = 'stopped/crashed';
             throw error;
         }
 
@@ -129,7 +129,7 @@ export class FactorioServer implements Gameserver {
                 const output = execSync('screen -ls | grep "factorio" || true').toString();
                 if (!output) {
                     logger.warn("Factorio server process is stopped/crashed!");
-                    this.status.state = 'stopped';
+                    this.status.state = 'stopped/crashed';
                 } else {
                     this.status.state = 'running';
                 }

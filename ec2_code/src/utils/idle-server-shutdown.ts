@@ -1,5 +1,7 @@
 /* Module for ensuring server shuts down if not used */
 import { Gameserver } from "../gameservers";
+import { EC2 } from "aws-sdk";
+import { getInstanceMetadata } from "./instanceMetadata";
 
 
 const IDLE_CHECK_INTERVAL = 1000; // 1 sec.
@@ -12,13 +14,12 @@ export function startServerIdleCheck (gameserver: Gameserver) {
     async function syncCheck() {
         try {
             const status = await gameserver.getStatus();
-            if (status && status.playerCount && status.playerCount < 1) {
-                // @TODO: add more conditions to auto shutdown.
+            if ((status && status.playerCount && status.playerCount < 1) || status.state === 'stopped/crashed') {
 
                 if (!idleTimeoutTime) {
                     idleTimeoutTime = Date.now() + ALLOWED_IDLE_TIME;
                 } else if (Date.now() > idleTimeoutTime) {
-                    shutdownServer()
+                    await shutdownServer()
                 }
 
             } else {
@@ -26,7 +27,7 @@ export function startServerIdleCheck (gameserver: Gameserver) {
             }
 
         } finally {
-            if (stopIdleCheck) {
+            if (!stopIdleCheck) {
                 setTimeout(syncCheck, IDLE_CHECK_INTERVAL);
             }
         }
@@ -45,8 +46,23 @@ export function getIdleTimeoutTime(): number | undefined {
 }
 
 
-function shutdownServer() {
-    // @TODO: server shutdown logic.
-    // Shutdown gameserver
-    // EC2 client instance shutdown.
+async function shutdownServer() {
+    // Lock to ensure this only runs once:
+    if (stopIdleCheck) return;
+    else stopIdleCheck = true;
+
+    const instanceMetadata = await getInstanceMetadata()
+    const ec2Client = new EC2();
+
+
+    // Server save + shutdown logic.
+
+
+    // Sending instance shutdown command.
+    await ec2Client.stopInstances({
+        InstanceIds: [
+            instanceMetadata.instanceId
+        ]
+    })
+    // Instance command sent...
 }
