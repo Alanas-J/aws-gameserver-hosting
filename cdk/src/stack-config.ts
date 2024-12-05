@@ -15,6 +15,7 @@ export const serverInstances: GameserverConfig[] = [
         name: 'test_server',
         startOnNextBoot: 'factorio',
         instanceType: 't3a.small',
+        version: '2.0.23',
         ssdStorageCapacityGiB: 10
     }
 ]

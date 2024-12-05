@@ -19,4 +19,12 @@ sudo -su gameserver-user GAMESERVER_SERVER_FILES_DIR="/opt/server_files" GAMESER
 # Performing a manual code sync
 sudo -su gameserver-user /opt/gameserver/scripts/utils/code_sync.sh
 
+# Attaching to the factorio server console
+sudo -su gameserver-user screen -S factorio -r
+# To deattach press the following in sequence
+CTRL + A then D
+
+
+## Temp testing =======================================
+sudo -su gameserver-user screen -S factorio -X stuff "/quit\\n"
 ```

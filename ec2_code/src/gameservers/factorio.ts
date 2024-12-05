@@ -17,7 +17,6 @@ export class FactorioServer implements Gameserver {
     crashCheckInterval?: NodeJS.Timeout
     started = false
 
-
     constructor(instanceMeta: InstanceMetadata) {
         console.log(instanceMeta);
 
