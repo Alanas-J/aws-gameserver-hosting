@@ -3,7 +3,7 @@ import logger from './utils/logger';
 import { setDNSRecord } from './utils/dns';
 import { getInstanceMetadata } from './utils/instanceMetadata';
 import { Gameserver, GameserverStatus, startGameserver } from './gameservers';
-import { startServerIdleCheck } from './utils/idle-server-shutdown';
+import { getIdleTimeoutTime, startServerIdleCheck } from './utils/idle-server-shutdown';
 
 logger.info('Node.js Application started');
 
@@ -30,6 +30,7 @@ server.get('/status', async (request, reply) => {
     if (currentGameServer) {
         try {
             const status = await currentGameServer.getStatus();
+            status.idleTimeoutTime = getIdleTimeoutTime()
             logger.info('Server status:', { status });
 
             cachedStatus = status;

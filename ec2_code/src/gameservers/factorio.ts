@@ -5,8 +5,6 @@ import logger from "../utils/logger";
 import { execSync } from "child_process";
 import crypto from 'crypto';
 import { Rcon } from "rcon-client";
-import { getIdleTimeoutTime } from "../utils/idle-server-shutdown";
-
 
 const rconConfig = {
     host: 'localhost',
@@ -18,6 +16,7 @@ export class FactorioServer implements Gameserver {
     status: GameserverStatus
     crashCheckInterval: NodeJS.Timeout
     started = false
+
 
     constructor(instanceMeta: InstanceMetadata) {
         console.log(instanceMeta);
@@ -121,23 +120,11 @@ export class FactorioServer implements Gameserver {
             throw error;
         }
 
-        logger.info('Started!');
+        logger.info('Server started!');
         this.status.state = 'running';
 
-        // Crash check loop
-        this.crashCheckInterval = setInterval(() => {
-            try {
-                const output = execSync('screen -ls | grep "factorio" || true').toString();
-                if (!output) {
-                    logger.warn("Factorio server process is stopped/crashed!");
-                    this.status.state = 'stopped/crashed';
-                } else {
-                    this.status.state = 'running';
-                }
-            } catch (error: any) {
-                logger.error('Error performing server crash check', { errorMessage: error.message, stdError: error?.stderr.toString() });
-            }
-        }, 5000);
+        logger.info('Server crash check loop initiated.');
+        this.crashCheckInterval = setInterval(this.serverCrashCheck, 5000);
     }
 
 
@@ -154,6 +141,22 @@ export class FactorioServer implements Gameserver {
         } catch (error: any) {
             logger.error('Error getting the version', { errorMessage: error.message, stdError: error?.stderr.toString() });
             throw error;
+        }
+    }
+
+
+    serverCrashCheck() {
+        try {
+            const output = execSync('screen -ls | grep "factorio" || true').toString();
+            if (!output) {
+                logger.warn("Factorio server process is stopped/crashed!");
+                this.status.state = 'stopped/crashed';
+                clearInterval(this.crashCheckInterval);
+            } else {
+                this.status.state = 'running';
+            }
+        } catch (error: any) {
+            logger.error('Error performing server crash check', { errorMessage: error.message, stdError: error?.stderr.toString() });
         }
     }
 
@@ -180,8 +183,6 @@ export class FactorioServer implements Gameserver {
     
                 rcon.end();
                 this.status.state = 'running';
-                this.status.idleTimeoutTime = getIdleTimeoutTime();
-
                 logger.info('Current factorio server status', { status: this.status });
             } catch (error) {
                 logger.error('Error while fetching status via RCON:', { error: error, status: this.status  });
