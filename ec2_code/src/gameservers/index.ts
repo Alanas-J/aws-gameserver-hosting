@@ -10,6 +10,7 @@ export interface GameserverStatus {
     additionalServerStats?: {
         [key: string]: any
     }
+    idleTimeoutTime?: number
 }
 
 

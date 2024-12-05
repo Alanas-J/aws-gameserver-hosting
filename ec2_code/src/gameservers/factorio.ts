@@ -5,6 +5,7 @@ import logger from "../utils/logger";
 import { execSync } from "child_process";
 import crypto from 'crypto';
 import { Rcon } from "rcon-client";
+import { getIdleTimeoutTime } from "../utils/idle-server-shutdown";
 
 
 const rconConfig = {
@@ -136,7 +137,7 @@ export class FactorioServer implements Gameserver {
             } catch (error: any) {
                 logger.error('Error performing server crash check', { errorMessage: error.message, stdError: error?.stderr.toString() });
             }
-        }, 5000)
+        }, 5000);
     }
 
 
@@ -179,6 +180,8 @@ export class FactorioServer implements Gameserver {
     
                 rcon.end();
                 this.status.state = 'running';
+                this.status.idleTimeoutTime = getIdleTimeoutTime();
+
                 logger.info('Current factorio server status', { status: this.status });
             } catch (error) {
                 logger.error('Error while fetching status via RCON:', { error: error, status: this.status  });

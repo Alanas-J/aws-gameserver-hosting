@@ -12,6 +12,8 @@ let idleTimeoutTime: number | undefined = undefined;
 
 export function startServerIdleCheck (gameserver: Gameserver) {
     async function syncCheck() {
+        if (stopIdleCheck) return;
+
         try {
             const status = await gameserver.getStatus();
             if ((status && status.playerCount && status.playerCount < 1) || status.state === 'stopped/crashed') {
@@ -19,7 +21,9 @@ export function startServerIdleCheck (gameserver: Gameserver) {
                 if (!idleTimeoutTime) {
                     idleTimeoutTime = Date.now() + ALLOWED_IDLE_TIME;
                 } else if (Date.now() > idleTimeoutTime) {
-                    await shutdownServer()
+                    stopIdleCheck = true;
+                    await shutdownServer(gameserver)
+                    return;
                 }
 
             } else {
@@ -38,6 +42,7 @@ export function startServerIdleCheck (gameserver: Gameserver) {
 
 export function stopServerIdleCheck() {
     stopIdleCheck = true;
+    idleTimeoutTime = undefined;
 }
 
 
@@ -46,17 +51,12 @@ export function getIdleTimeoutTime(): number | undefined {
 }
 
 
-async function shutdownServer() {
-    // Lock to ensure this only runs once:
-    if (stopIdleCheck) return;
-    else stopIdleCheck = true;
-
+async function shutdownServer(gameserver: Gameserver) {
     const instanceMetadata = await getInstanceMetadata()
     const ec2Client = new EC2();
 
-
     // Server save + shutdown logic.
-
+    await gameserver.shutDown()
 
     // Sending instance shutdown command.
     await ec2Client.stopInstances({
@@ -64,5 +64,4 @@ async function shutdownServer() {
             instanceMetadata.instanceId
         ]
     })
-    // Instance command sent...
 }
