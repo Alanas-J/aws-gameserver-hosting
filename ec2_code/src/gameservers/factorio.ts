@@ -14,7 +14,7 @@ const rconConfig = {
 
 export class FactorioServer implements Gameserver {
     status: GameserverStatus
-    crashCheckInterval: NodeJS.Timeout
+    crashCheckInterval?: NodeJS.Timeout
     started = false
 
 
@@ -120,11 +120,22 @@ export class FactorioServer implements Gameserver {
             throw error;
         }
 
-        logger.info('Server started!');
-        this.status.state = 'running';
-
         logger.info('Server crash check loop initiated.');
-        this.crashCheckInterval = setInterval(this.serverCrashCheck, 5000);
+        this.crashCheckInterval = setInterval(() => {
+            try {
+                const output = execSync('screen -ls | grep "factorio" || true').toString();
+                if (!output) {
+                    logger.warn("Factorio server process is stopped/crashed!");
+                    this.status.state = 'stopped/crashed';
+                    if (this.crashCheckInterval) {
+                        clearInterval(this.crashCheckInterval);
+                        this.crashCheckInterval = undefined;
+                    }
+                }
+            } catch (error: any) {
+                logger.error('Error performing server crash check', { errorMessage: error.message, stdError: error?.stderr?.toString() });
+            }
+        }, 5000);
     }
 
 
@@ -143,23 +154,6 @@ export class FactorioServer implements Gameserver {
             throw error;
         }
     }
-
-
-    serverCrashCheck() {
-        try {
-            const output = execSync('screen -ls | grep "factorio" || true').toString();
-            if (!output) {
-                logger.warn("Factorio server process is stopped/crashed!");
-                this.status.state = 'stopped/crashed';
-                clearInterval(this.crashCheckInterval);
-            } else {
-                this.status.state = 'running';
-            }
-        } catch (error: any) {
-            logger.error('Error performing server crash check', { errorMessage: error.message, stdError: error?.stderr.toString() });
-        }
-    }
-
 
     async getStatus() {
         if (['running', 'status-check-error'].includes(this.status.state)) {

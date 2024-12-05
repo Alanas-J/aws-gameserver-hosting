@@ -5,7 +5,7 @@ import { getInstanceMetadata } from "./instanceMetadata";
 import logger from "./logger";
 
 
-const IDLE_CHECK_INTERVAL = 1000; // 1 sec.
+const IDLE_CHECK_INTERVAL = 5000; // 1 sec.
 const ALLOWED_IDLE_TIME = 600000; // 10 mins.
 let stopIdleCheck = false;
 let idleTimeoutTime: number | undefined = undefined;

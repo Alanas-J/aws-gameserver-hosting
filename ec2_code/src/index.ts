@@ -17,14 +17,14 @@ server.get('/ping', async (request, reply) => {
 
 // Basic caching to prevent endpoint abuse.
 const CACHE_TTL = 1000;
-let cachedStatus: GameserverStatus | undefined;
+let cachedStatusResponse: GameserverStatus | undefined;
 let cacheExpiryTime: Date | undefined;
 
 server.get('/status', async (request, reply) => {
     logger.info(`Status endpoint was hit!`);
-    if (cachedStatus && cacheExpiryTime && cacheExpiryTime.getTime() > Date.now()) {
-        logger.info(`Returned cached status`, { cachedStatus });
-        return cachedStatus;
+    if (cachedStatusResponse && cacheExpiryTime && cacheExpiryTime.getTime() > Date.now()) {
+        logger.info(`Returned cached status`, { cachedStatus: cachedStatusResponse });
+        return cachedStatusResponse;
     }
 
     if (currentGameServer) {
@@ -33,18 +33,18 @@ server.get('/status', async (request, reply) => {
             status.idleTimeoutTime = getIdleTimeoutTime()
             logger.info('Server status:', { status });
 
-            cachedStatus = status;
+            cachedStatusResponse = status;
             cacheExpiryTime = new Date(Date.now() + CACHE_TTL);
             return status;
         } catch (error) {
             logger.info('Error getting server status:', { error });
             reply.status(500);
-            return { message: 'Failure to get server status.' }
+            return { error: 'error', message: 'Failure to get server status.' }
         }
     } else {
         logger.warn('Gameserver not running.')
         reply.status(500);
-        reply.send({ message: 'Gameserver not running yet.' })
+        reply.send({ error: 'not_running',message: 'Gameserver not running yet.' })
     }
 });
 
