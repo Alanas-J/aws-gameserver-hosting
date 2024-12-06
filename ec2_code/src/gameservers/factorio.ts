@@ -153,6 +153,7 @@ export class FactorioServer implements Gameserver {
         }
     }
 
+
     async getStatus() {
         if (['running', 'status-check-error'].includes(this.status.state)) {
             try {

@@ -70,8 +70,7 @@ export class EC2ProvisioningConstruct extends Construct {
                 '*',
             ]
         }));
-
-        // Allows the EC2s to shutdown eachother.
+        // Allows the EC2s of this stack to shutdown eachother.
         this.gameserverRole.addToPolicy(new PolicyStatement({
             actions: [
                 'ec2:StopInstances',
@@ -97,7 +96,6 @@ export class EC2ProvisioningConstruct extends Construct {
             }));
         }
 
-        
 
         // Currently the only way to enable metadata tag access is via Cfn constructs in the CDK.
         const instanceProfile = new CfnInstanceProfile(this, 'InstanceProfile', {
@@ -121,6 +119,7 @@ export class EC2ProvisioningConstruct extends Construct {
                 userData: scriptContent.toString('base64'),
             }
         });
+
 
         // Gameserver provisioning
         this.gameservers = serverInstances.map((instanceConfig) => {
@@ -153,7 +152,6 @@ export class EC2ProvisioningConstruct extends Construct {
                 Tags.of(instance).add('HostedZone', stackConfig.ROUTE53_ZONE_ID);
             }
             return instance;
-
         });
     }
 }

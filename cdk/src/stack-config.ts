@@ -8,7 +8,8 @@ export const serverInstances: GameserverConfig[] = [
         name: 'factorio',
         startOnNextBoot: 'factorio',
         instanceType: 't3a.small',
-        ssdStorageCapacityGiB: 12 // $0.88 per month; 8GB expected just for the EC2 Amazon Linux snapshot.
+        version: '2.0.23',
+        ssdStorageCapacityGiB: 12 // $0.96 per month; 8GB expected just for the EC2 Amazon Linux snapshot.
     },
     {
         id: 'gameserver_dev',

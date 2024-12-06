@@ -5,8 +5,8 @@ import logger from "./logger";
 import { EC2Client, StopInstancesCommand } from "@aws-sdk/client-ec2";
 
 
-const IDLE_CHECK_INTERVAL = 5000; // 1 sec.
-const ALLOWED_IDLE_TIME = 300000; // 5 mins.
+const IDLE_CHECK_INTERVAL = 10000; // 10 sec.
+const ALLOWED_IDLE_TIME = 600000; // 10 mins.
 let stopIdleCheck = false;
 let idleTimeoutTime: number | undefined = undefined;
 
@@ -17,20 +17,22 @@ export function startServerIdleCheck (gameserver: Gameserver) {
 
         try {
             const status = await gameserver.getStatus();
-            if ((status && status.playerCount !== undefined && status.playerCount < 1) || status.state === 'stopped/crashed') {
 
+            if ((status && status.playerCount !== undefined && status.playerCount < 1) || status.state === 'stopped/crashed') {
+                
                 if (!idleTimeoutTime) {
                     idleTimeoutTime = Date.now() + ALLOWED_IDLE_TIME;
                 } else if (Date.now() > idleTimeoutTime) {
-                    stopIdleCheck = true;
-                    await shutdownServer(gameserver)
+                    stopServerIdleCheck();
+                    await shutdownServer(gameserver);
                     return;
                 }
 
             } else {
                 idleTimeoutTime = undefined;
             }
-
+        } catch (error: any) {
+            logger.error('Error caught in the idle sync check loop', { error, errorMessage: error.message });
         } finally {
             if (!stopIdleCheck) {
                 setTimeout(syncCheck, IDLE_CHECK_INTERVAL);

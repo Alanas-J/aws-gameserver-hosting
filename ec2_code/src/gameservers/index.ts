@@ -25,6 +25,6 @@ export function startGameserver(instanceMeta: InstanceMetadata): Gameserver | un
     
     switch (instanceMeta.tags.gameHosted) {
         case 'factorio':
-            return new FactorioServer(instanceMeta)
+            return new FactorioServer(instanceMeta);
     }
 }

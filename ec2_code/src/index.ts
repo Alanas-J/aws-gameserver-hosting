@@ -31,7 +31,7 @@ server.get('/status', async (request, reply) => {
     if (currentGameServer) {
         try {
             const status = await currentGameServer.getStatus();
-            status.idleTimeoutTime = getIdleTimeoutTime()
+            status.idleTimeoutTime = getIdleTimeoutTime();
             logger.info('Server status:', { status });
 
             cachedStatusResponse = status;
@@ -43,7 +43,7 @@ server.get('/status', async (request, reply) => {
             return { error: 'error', message: 'Failure to get server status.' }
         }
     } else {
-        logger.warn('Gameserver not running.')
+        logger.warn('Gameserver not running.');
         reply.status(500);
         reply.send({ error: 'not_running',message: 'Gameserver not running yet.' })
     }
