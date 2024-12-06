@@ -52,9 +52,9 @@ export function getIdleTimeoutTime(): number | undefined {
 }
 
 
-async function shutdownServer(gameserver: Gameserver) {
+export async function shutdownServer(gameserver: Gameserver) {
     const instanceMetadata = await getInstanceMetadata();
-    const ec2Client = new EC2Client();
+    const ec2Client = new EC2Client({ region: instanceMetadata.instanceRegion });
 
     // Server save + shutdown logic.
     try {
@@ -67,12 +67,10 @@ async function shutdownServer(gameserver: Gameserver) {
     // Sending instance shutdown command.
     try {
         const response = await ec2Client.send(new StopInstancesCommand({
-            "InstanceIds": [
-                instanceMetadata.instanceId
-            ]
+            "InstanceIds": [instanceMetadata.instanceId]
         }));
         logger.info('Instance shutdown command response', { response })
-    } catch (error) {
-        logger.error('Instance shutdown failed...', { error });
+    } catch (error: any) {
+        logger.error('Instance shutdown failed...', { error, errorMessage: error.message, instanceId: instanceMetadata.instanceId });
     }
 }

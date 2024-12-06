@@ -15,7 +15,6 @@ const rconConfig = {
 export class FactorioServer implements Gameserver {
     status: GameserverStatus
     crashCheckInterval?: NodeJS.Timeout
-    started = false
 
     constructor(instanceMeta: InstanceMetadata) {
         console.log(instanceMeta);
@@ -199,14 +198,15 @@ export class FactorioServer implements Gameserver {
                 this.crashCheckInterval = undefined;
             }
 
+            logger.info('Waiting for factorio server process shutdown...');
             while(true) {
-                logger.info('Checking for factorio server process shutdown...');
-                const output = execSync('pgrep -f factorio || true').toString();
+                const output = execSync('pgrep -a factorio || true').toString();
 
                 if (!output) {
-                    logger.info('Process sucesfully shut down!');
+                    logger.info('Process successfully shut down!');
                     return;
                 } else {
+                    logger.info('pgrep still detects a process...', { output });
                     await new Promise(resolve => setTimeout(resolve, 1000));
                 }
             }
