@@ -4,6 +4,7 @@ import { setDNSRecord } from './utils/dns';
 import { getInstanceMetadata } from './utils/instanceMetadata';
 import { Gameserver, GameserverStatus, startGameserver } from './gameservers';
 import { getIdleTimeoutTime, startServerIdleCheck } from './utils/idle-server-shutdown';
+import { execSync } from 'child_process';
 
 logger.info('Node.js Application started');
 
@@ -13,6 +14,19 @@ const server = fastify();
 server.get('/ping', async (request, reply) => {
     logger.info(`Ping endpoint was hit!`);
     return 'pong\n';
+});
+
+server.get('/test', async (request, reply) => {
+    try {
+        execSync('screen -S factorio -r');
+    } catch (error: any) {
+        logger.error('Error shutting factorio server down gracefully.', { 
+            errorMessage: error.message, 
+            stdError: error?.stderr?.toString(),
+            stdOut: error?.stdout?.toString(),
+        });
+    }
+    return 'test\n';
 });
 
 // Basic caching to prevent endpoint abuse.

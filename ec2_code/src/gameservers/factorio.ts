@@ -187,12 +187,36 @@ export class FactorioServer implements Gameserver {
 
 
     async shutDown() {
-        this.status.state = 'shutting-down'
+        this.status.state = 'shutting-down';
+
         try {
             logger.info('Shutting down factorio server.');
-            execSync('screen -S factorio -X stuff "/quit\\n" && screen -S factorio -r');
+            execSync('screen -S factorio -X stuff "/quit\\n"');
+
+            logger.info('Disabling the process crash check loop.');
+            if (this.crashCheckInterval) {
+                clearInterval(this.crashCheckInterval);
+                this.crashCheckInterval = undefined;
+            }
+
+            while(true) {
+                logger.info('Checking for factorio server process shutdown...');
+                const output = execSync('pgrep -f factorio || true').toString();
+
+                if (!output) {
+                    logger.info('Process sucesfully shut down!');
+                    return;
+                } else {
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+            }
+
         } catch (error: any) {
-            logger.error('Error shutting factorio server down gracefully.', { errorMessage: error.message, stdError: error?.stderr.toString() });
+            logger.error('Error shutting factorio server down gracefully.', { 
+                errorMessage: error.message, 
+                stdError: error?.stderr?.toString(),
+                stdOut: error?.stdout?.toString(),
+            });
         }
     }
 }
