@@ -16,7 +16,7 @@ export interface GameserverStatus {
 
 export interface Gameserver {
     getStatus: () => Promise<GameserverStatus>
-    shutDown: () => Promise<any>
+    shutDown: () => Promise<void>
 }
 
 

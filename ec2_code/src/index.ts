@@ -10,7 +10,7 @@ logger.info('Node.js Application started');
 let currentGameServer: Gameserver | undefined = undefined;
 
 const server = fastify();
-server.get('/ping', async (request, reply) => {
+server.get('/ping', async () => {
     logger.info(`Ping endpoint was hit!`);
     return 'pong\n';
 });

@@ -4,6 +4,7 @@ import { Construct } from "constructs";
 import { stackConfig, serverInstances } from "../../stack-config";
 import { CfnInstanceProfile, PolicyStatement, Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
 import { S3StorageConstruct } from "../s3-storage-construct/s3-storage-construct";
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 import path = require("path");
 import { readFileSync } from "fs";
 
