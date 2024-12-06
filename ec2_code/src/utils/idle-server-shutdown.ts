@@ -1,6 +1,6 @@
 /* Module for ensuring server shuts down if not used */
 import { Gameserver } from "../gameservers";
-import { getInstanceMetadata } from "./instanceMetadata";
+import { getInstanceMetadata } from "./instance-metadata";
 import logger from "./logger";
 import { EC2Client, StopInstancesCommand } from "@aws-sdk/client-ec2";
 
@@ -62,7 +62,7 @@ export async function shutdownServer(gameserver: Gameserver) {
     try {
         logger.info('Idle gameserver process shutdown');
         await gameserver.shutDown();
-    } catch (error) {
+    } catch {
         logger.error('Idle gameserver process shutdown failed...');
     }
 

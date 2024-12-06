@@ -1,4 +1,4 @@
-import { InstanceMetadata } from "../utils/instanceMetadata"
+import { InstanceMetadata } from "../utils/instance-metadata"
 import logger from "../utils/logger"
 import { FactorioServer } from "./factorio"
 

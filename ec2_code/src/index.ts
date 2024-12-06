@@ -1,7 +1,7 @@
 import fastify from 'fastify';
 import logger from './utils/logger';
 import { setDNSRecord } from './utils/dns';
-import { getInstanceMetadata } from './utils/instanceMetadata';
+import { getInstanceMetadata } from './utils/instance-metadata';
 import { Gameserver, GameserverStatus, startGameserver } from './gameservers';
 import { getIdleTimeoutTime, startServerIdleCheck } from './utils/idle-server-shutdown';
 

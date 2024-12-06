@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync } from "fs";
 import { Gameserver, GameserverStatus } from ".";
-import { InstanceMetadata } from "../utils/instanceMetadata";
+import { InstanceMetadata } from "../utils/instance-metadata";
 import logger from "../utils/logger";
 import { execSync } from "child_process";
 import crypto from 'crypto';
