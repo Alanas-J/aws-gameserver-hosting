@@ -1,4 +1,4 @@
-import { startServerIdleCheck } from "../utils/idle-server-shutdown"
+import { startServerIdleCheckLoop } from "../utils/idle-server-shutdown"
 import { InstanceMetadata } from "../utils/instance-metadata"
 import logger from "../utils/logger"
 import { FactorioServer } from "./factorio"
@@ -31,7 +31,7 @@ export function startGameserver(instanceMeta: InstanceMetadata): Gameserver | un
 
     if (gameserver) {
         setTimeout(() => {
-            startServerIdleCheck(gameserver as Gameserver);
+            startServerIdleCheckLoop(gameserver as Gameserver);
         }, 5000);
     }
     return gameserver;
