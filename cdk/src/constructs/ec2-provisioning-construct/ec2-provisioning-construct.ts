@@ -1,4 +1,4 @@
-import { Tags } from "aws-cdk-lib";
+import { Stack, Tags } from "aws-cdk-lib";
 import { CfnInstance, CfnLaunchTemplate, EbsDeviceVolumeType, MachineImage, Peer, Port, SecurityGroup, Vpc } from "aws-cdk-lib/aws-ec2";
 import { Construct } from "constructs";
 import { stackConfig, serverInstances } from "../../stack-config";
@@ -70,7 +70,18 @@ export class EC2ProvisioningConstruct extends Construct {
                 '*',
             ]
         }));
-
+        // Allows the EC2s of this stack to shutdown eachother.
+        this.gameserverRole.addToPolicy(new PolicyStatement({
+            actions: [
+                'ec2:StopInstances',
+            ],
+            resources: ['*'],
+            conditions: {
+                'StringEquals': {
+                    'aws:ResourceTag/aws:cloudformation:stack-id': Stack.of(this).stackId,
+                }
+            }
+        }));
 
         if (stackConfig.ENABLE_ROUTE_53_MAPPING) {
             // Power for the EC2 instance to create ARecords for itself.
@@ -84,6 +95,7 @@ export class EC2ProvisioningConstruct extends Construct {
                 resources: [`arn:aws:route53:::hostedzone/${stackConfig.ROUTE53_ZONE_ID}`],
             }));
         }
+
 
         // Currently the only way to enable metadata tag access is via Cfn constructs in the CDK.
         const instanceProfile = new CfnInstanceProfile(this, 'InstanceProfile', {
@@ -107,6 +119,7 @@ export class EC2ProvisioningConstruct extends Construct {
                 userData: scriptContent.toString('base64'),
             }
         });
+
 
         // Gameserver provisioning
         this.gameservers = serverInstances.map((instanceConfig) => {
@@ -139,7 +152,6 @@ export class EC2ProvisioningConstruct extends Construct {
                 Tags.of(instance).add('HostedZone', stackConfig.ROUTE53_ZONE_ID);
             }
             return instance;
-
         });
     }
 }

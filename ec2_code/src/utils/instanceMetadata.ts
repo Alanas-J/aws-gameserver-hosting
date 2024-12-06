@@ -4,6 +4,8 @@ import logger from './logger';
 const METADATA_SERVICE_BASE_URL = 'http://169.254.169.254/latest';
 const METADATA_TAGS_URL = `${METADATA_SERVICE_BASE_URL}/meta-data/tags/instance`;
 const METADATA_PUBLIC_IP_URL = `${METADATA_SERVICE_BASE_URL}/meta-data/public-ipv4`;
+const METADATA_INSTANCE_ID_URL = `${METADATA_SERVICE_BASE_URL}/meta-data/instance-id`;
+const METADATA_INSTANCE_REGION_URL = `${METADATA_SERVICE_BASE_URL}/meta-data/placement/region`;
 
 export interface InstanceMetadata {
     tags: {
@@ -14,6 +16,8 @@ export interface InstanceMetadata {
         hostedZone?: string
     }
     publicIp: string
+    instanceId: string
+    instanceRegion: string
 }
 
 let instanceMetadata: undefined | InstanceMetadata;
@@ -22,10 +26,14 @@ export async function getInstanceMetadata(): Promise<InstanceMetadata> {
         const metadataServiceToken = await fetchMetadataServiceToken();
         const metadataTags = await fetchTagsFromMetadata(metadataServiceToken);
         const metadataPublicIp = await fetchPublicIPFromMetadata(metadataServiceToken);
+        const metadataInstanceId = await fetchInstanceIdFromMetadata(metadataServiceToken);
+        const metadataInstanceRegion = await fetchInstanceRegionFromMetadata(metadataServiceToken);
 
         instanceMetadata = {
             tags: metadataTags,
-            publicIp: metadataPublicIp
+            publicIp: metadataPublicIp,
+            instanceId: metadataInstanceId,
+            instanceRegion: metadataInstanceRegion
         }
     }
     return instanceMetadata;
@@ -78,10 +86,46 @@ export async function fetchPublicIPFromMetadata(metadataServiceToken: string): P
         
         const response = await axios.get(METADATA_PUBLIC_IP_URL, { headers: metadataServiceHeaders });
         logger.info('Instance public IP fetched.', { response: response.data });
-        return response.data
+        return response.data;
 
     } catch (error: any) {
         logger.error('Error fetching EC2 IP.', { errorMessage: error?.message });
+        throw error;
+    }
+}
+
+
+export async function fetchInstanceIdFromMetadata(metadataServiceToken: string): Promise<string> {
+    try {
+        logger.info('Fetching EC2 id.');
+        const metadataServiceHeaders = {
+            'X-aws-ec2-metadata-token': metadataServiceToken
+        }
+        
+        const response = await axios.get(METADATA_INSTANCE_ID_URL, { headers: metadataServiceHeaders });
+        logger.info('Instance id fetched.', { response: response.data });
+        return response.data;
+
+    } catch (error: any) {
+        logger.error('Error fetching EC2 id.', { errorMessage: error?.message });
+        throw error;
+    }
+}
+
+
+export async function fetchInstanceRegionFromMetadata(metadataServiceToken: string): Promise<string> {
+    try {
+        logger.info('Fetching EC2 id.');
+        const metadataServiceHeaders = {
+            'X-aws-ec2-metadata-token': metadataServiceToken
+        }
+        
+        const response = await axios.get(METADATA_INSTANCE_REGION_URL, { headers: metadataServiceHeaders });
+        logger.info('Instance region fetched.', { response: response.data });
+        return response.data;
+
+    } catch (error: any) {
+        logger.error('Error fetching EC2 region.', { errorMessage: error?.message });
         throw error;
     }
 }

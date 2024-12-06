@@ -6,7 +6,6 @@ import { execSync } from "child_process";
 import crypto from 'crypto';
 import { Rcon } from "rcon-client";
 
-
 const rconConfig = {
     host: 'localhost',
     port: 27015,
@@ -15,7 +14,7 @@ const rconConfig = {
 
 export class FactorioServer implements Gameserver {
     status: GameserverStatus
-    crashCheckInterval: NodeJS.Timeout
+    crashCheckInterval?: NodeJS.Timeout
 
     constructor(instanceMeta: InstanceMetadata) {
         console.log(instanceMeta);
@@ -115,27 +114,26 @@ export class FactorioServer implements Gameserver {
 
         } catch (error: any) {
             logger.error('Error starting Factorio server in screen', { errorMessage: error.message, stdError: error?.stderr.toString() });
-            this.status.state = 'stopped';
+            this.status.state = 'stopped/crashed';
             throw error;
         }
 
-        logger.info('Started!');
-        this.status.state = 'running';
-
-        // Crash check loop
+        logger.info('Server crash check loop initiated.');
         this.crashCheckInterval = setInterval(() => {
             try {
                 const output = execSync('screen -ls | grep "factorio" || true').toString();
                 if (!output) {
                     logger.warn("Factorio server process is stopped/crashed!");
-                    this.status.state = 'stopped';
-                } else {
-                    this.status.state = 'running';
+                    this.status.state = 'stopped/crashed';
+                    if (this.crashCheckInterval) {
+                        clearInterval(this.crashCheckInterval);
+                        this.crashCheckInterval = undefined;
+                    }
                 }
             } catch (error: any) {
-                logger.error('Error performing server crash check', { errorMessage: error.message, stdError: error?.stderr.toString() });
+                logger.error('Error performing server crash check', { errorMessage: error.message, stdError: error?.stderr?.toString() });
             }
-        }, 5000)
+        }, 5000);
     }
 
 
@@ -157,42 +155,69 @@ export class FactorioServer implements Gameserver {
 
 
     async getStatus() {
-        try {
-            logger.info('Fetching factorio server status via RCON...');
-            const rcon = await Rcon.connect(rconConfig)
-
-            const rconResponse = await rcon.send('/players online');
-            logger.info('Players online command response', { rconResponse });
-            const playerCount = rconResponse.match(/Online players \((\d+)\)/)?.[1];
-
-            if (playerCount) {
-                this.status.playerCount = parseInt(playerCount);
+        if (['running', 'status-check-error'].includes(this.status.state)) {
+            try {
+                logger.info('Fetching factorio server status via RCON...');
+                const rcon = await Rcon.connect(rconConfig)
+    
+                const rconResponse = await rcon.send('/players online');
+                logger.info('Players online command response', { rconResponse });
+                const playerCount = rconResponse.match(/Online players \((\d+)\)/)?.[1];
+    
+                if (playerCount) {
+                    this.status.playerCount = parseInt(playerCount);
+                }
+    
+                // @TODO: Future potential additional config to fetch
+                // /config get max-players
+                // /config get name
+                // /config get description
+                // /config get tags
+    
+                rcon.end();
+                this.status.state = 'running';
+                logger.info('Current factorio server status', { status: this.status });
+            } catch (error) {
+                logger.error('Error while fetching status via RCON:', { error: error, status: this.status  });
+                this.status.state = 'status-check-error';
             }
-
-            // @TODO: Future potential additional config to fetch
-            // /config get max-players
-            // /config get name
-            // /config get description
-            // /config get tags
-
-            rcon.end();
-            logger.info('Current factorio server status', this.status);
-            return this.status;
-
-        } catch (error) {
-            logger.error('Error while fetching status via RCON:', { error: error });
-            throw error;
         }
+        return this.status;
     }
 
 
     async shutDown() {
-        this.status.state = 'shutting-down'
+        this.status.state = 'shutting-down';
+
         try {
             logger.info('Shutting down factorio server.');
-            execSync('screen -S factorio -X stuff "/quit\\n" && screen -S factorio -r');
+            execSync('screen -S factorio -X stuff "/quit\\n"');
+
+            logger.info('Disabling the process crash check loop.');
+            if (this.crashCheckInterval) {
+                clearInterval(this.crashCheckInterval);
+                this.crashCheckInterval = undefined;
+            }
+
+            logger.info('Waiting for factorio server process shutdown...');
+            while(true) {
+                const output = execSync('pgrep -a factorio || true').toString();
+
+                if (!output) {
+                    logger.info('Process successfully shut down!');
+                    return;
+                } else {
+                    logger.info('pgrep still detects a process...', { output });
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+            }
+
         } catch (error: any) {
-            logger.error('Error shutting factorio server down gracefully.', { errorMessage: error.message, stdError: error?.stderr.toString() });
+            logger.error('Error shutting factorio server down gracefully.', { 
+                errorMessage: error.message, 
+                stdError: error?.stderr?.toString(),
+                stdOut: error?.stdout?.toString(),
+            });
         }
     }
 }

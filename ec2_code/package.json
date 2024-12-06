@@ -11,6 +11,7 @@
   "keywords": [],
   "author": "",
   "dependencies": {
+    "@aws-sdk/client-ec2": "^3.703.0",
     "aws-sdk": "^2.1692.0",
     "axios": "^1.7.7",
     "fastify": "^5.0.0",

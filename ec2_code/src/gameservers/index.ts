@@ -3,13 +3,14 @@ import logger from "../utils/logger"
 import { FactorioServer } from "./factorio"
 
 export interface GameserverStatus {
-    state: 'installing' | 'starting' | 'running' | 'shutting-down' | 'stopped' | 'status-check-fail' 
+    state: 'installing' | 'starting' | 'running' | 'shutting-down' | 'stopped/crashed' | 'status-check-error' 
     launchTime: string
     playerCount?: number
     serverVersion?: string
     additionalServerStats?: {
         [key: string]: any
     }
+    idleTimeoutTime?: number
 }
 
 
@@ -24,6 +25,6 @@ export function startGameserver(instanceMeta: InstanceMetadata): Gameserver | un
     
     switch (instanceMeta.tags.gameHosted) {
         case 'factorio':
-            return new FactorioServer(instanceMeta)
+            return new FactorioServer(instanceMeta);
     }
 }
