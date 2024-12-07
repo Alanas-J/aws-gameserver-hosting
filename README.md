@@ -14,7 +14,7 @@ My idea is to leverage AWS Lambda and AWS EC2s to create a system where any one 
 ### Stack Architecture
 This stack levarages EC2, Lambda, S3, CloudWatch (+ optionally Route 53 & CloudFront)
 
-\<Will be adding an architecture diagram here\>
+![Gameserver Stack Architecture Diagram](Gameserver%20Stack%20Arch.png "Gameserver Stack Architecture Diagram")
 
 
 ## How to use this stack
