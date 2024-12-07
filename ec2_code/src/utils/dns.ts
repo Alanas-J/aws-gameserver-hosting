@@ -1,7 +1,7 @@
 
 /* Temporary module; this will be performed in a dedicated lambda in the future */
 import { Route53 } from "aws-sdk";
-import { InstanceMetadata } from "./instanceMetadata";
+import { InstanceMetadata } from "./instance-metadata";
 import logger from "./logger";
 
 
