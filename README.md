@@ -30,7 +30,7 @@ All the methods are HTTP method agnostic, can GET, POST, PUT etc... (slight lazi
 
 ### /instances
 Returns
-```json
+```ts
 {
     instanceDetails: InstanceDetails[]
 }
@@ -52,7 +52,7 @@ interface InstanceDetails {
 
 ### /instance/<instance_name>/status
 Returns
-```json
+```ts
 {
     instanceDetails: InstanceDetails
     gameserverStatus?: GameserverStatusResponse
@@ -80,9 +80,9 @@ These below require the Authorization header to be filled with your config assig
 Returns AWS SDK EC2 Client's StartInstancesCommandOutput.StartingInstances
 
 ### /instance/<instance_name>/stop
-Returns AWS SDK EC2 Client's StartInstancesCommandOutput.StoppingInstances
+Returns AWS SDK EC2 Client's StopInstancesCommandOutput.StoppingInstances
 
-### /instance/<instance_name>/reboot
+### /instance/<instance_name>/restart
 Returns AWS SDK EC2 Client's RebootInstancesCommandOutput
 
 
