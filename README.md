@@ -113,7 +113,7 @@ sudo -su gameserver-user screen -S factorio -r
 CTRL + A then D
 ```
 
-### Moving Server Files to and from AWS S3 using AWS S3 ClI
+### Moving Server Files to and from AWS S3 using AWS S3 CLI
 This stack creates an s3 with a /server_backups/ subdirectory. Meant for saving files.
 #### For Factorio
 ```bash
