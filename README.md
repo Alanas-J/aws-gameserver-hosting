@@ -26,8 +26,65 @@ Afterwards, run `npm i` to install the needed npm dependencies and `npm run depl
 
 
 ## Gameserver Lambda API
+All the methods are HTTP method agnostic, can GET, POST, PUT etc... (slight laziness on my part)
 
-\<Will be filling this out in the future...\>
+### /instances
+Returns
+```json
+{
+    instanceDetails: InstanceDetails[]
+}
+```
+
+InstanceDetails definition:
+``` ts
+interface InstanceDetails {
+    id?: string
+    state?: InstanceState
+    gameHosted?: string
+    serverName?: string
+    domain?: string
+    publicIp?: string
+    instanceType?: string
+    launchTime?: Date
+}
+```
+
+### /instance/<instance_name>/status
+Returns
+```json
+{
+    instanceDetails: InstanceDetails
+    gameserverStatus?: GameserverStatusResponse
+}
+```
+
+GameserverStatusResponse definition:
+``` ts
+interface GameserverStatusResponse {
+    state: 'installing' | 'starting' | 'running' | 'shutting-down' | 'stopped/crashed' | 'status-check-error' 
+    launchTime: string
+    playerCount?: number
+    serverVersion?: string
+    additionalServerStats?: {
+        [key: string]: any
+    }
+    idleTimeoutTime?: number
+}
+```
+
+---
+
+These below require the Authorization header to be filled with your config assigned API password:
+### /instance/<instance_name>/start
+Returns AWS SDK EC2 Client's StartInstancesCommandOutput.StartingInstances
+
+### /instance/<instance_name>/stop
+Returns AWS SDK EC2 Client's StartInstancesCommandOutput.StoppingInstances
+
+### /instance/<instance_name>/reboot
+Returns AWS SDK EC2 Client's RebootInstancesCommandOutput
+
 
 ## Useful instance shell commands
 This stack is very light and still relies on linux server management
@@ -54,13 +111,24 @@ sudo -su gameserver-user /opt/gameserver/scripts/utils/code_sync.sh
 sudo -su gameserver-user screen -S factorio -r
 # To deattach press the following in sequence
 CTRL + A then D
+```
 
-# Checking instance RAM usage.
-free -h
-# Checking instance storage usage.
-df -h
-# By default an amazonlinux image instance uses about ~2.7GB out of the required 8GB
-# After provisioning a bigger EBS volume you need to use a sequence of CLI commands to expand the partition and let the filesystem know of extra space.
+### Moving Server Files to and from AWS S3 using AWS S3 ClI
+This stack creates an s3 with a /server_backups/ subdirectory. Meant for saving files.
+#### For Factorio
+```bash
+    # Factorio save files files are in
+    /opt/server_files/factorio/saves
+
+    # We can copy all of the saves from EC2 to S3 (or vice versa if URIs are swapped)
+    # With the sync cli
+    aws s3 sync /opt/server_files/factorio/saves/ s3://BUCKET_NAME/server_backups/saves_dir_copy
+    # --delete can be passed to remove any pre-existing files in the targeted directory 
+    # ensuring a complete sync.
+
+    # We can additionally just copy a single file (example here copies a file from s3)
+    aws s3 cp s3://BUCKET_NAME/server_backups/saves_dir_copy/save.zip /opt/server_files/factorio/saves/
+
 ```
 
 ### System Resource Monitoring

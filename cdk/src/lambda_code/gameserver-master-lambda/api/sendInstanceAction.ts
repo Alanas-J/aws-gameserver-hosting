@@ -37,7 +37,7 @@ export async function sendInstanceAction(serverName: string, action: 'start' | '
             response = (await ec2Client.send(new StopInstancesCommand(commandArgs))).StoppingInstances;
             break;     
         case 'restart':
-            response = await ec2Client.send(new RebootInstancesCommand(commandArgs))
+            response = await ec2Client.send(new RebootInstancesCommand(commandArgs));
             break;   
         default:
             return httpResponse({ message: 'Invalid action.' }, 400);

@@ -22,7 +22,7 @@ export async function httpResponse (body: any, statusCode=200, headers={ "Conten
 
 // Used by Fetch API
 export function RequestTimeoutSignal (time: number) {
-	let controller = new AbortController();
+	const controller = new AbortController();
 	setTimeout(() => controller.abort(), time * 1000);
 	return controller.signal;
 };
