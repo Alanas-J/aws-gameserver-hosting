@@ -10,7 +10,7 @@ const METADATA_INSTANCE_REGION_URL = `${METADATA_SERVICE_BASE_URL}/meta-data/pla
 export interface InstanceMetadata {
     tags: {
         serverName: string
-        gameHosted: 'minecraft' | 'factorio'
+        gameHosted: 'minecraft-java' | 'factorio'
         gameserverConfig: {
             minecraftServerJarUrl?: string
             factorioVersion?: string
