@@ -9,7 +9,7 @@ import { Rcon } from "rcon-client";
 
 const rconConfig = {
     host: 'localhost',
-    port: 27015,
+    port: 25575,
     password: crypto.randomUUID() // Only the server needs to know / will use the RCON client.
 }
 
@@ -146,7 +146,7 @@ export class MinecraftJavaServer implements Gameserver {
 
             logger.info('Waiting for server process shutdown...');
             while(true) {
-                const output = execSync('pgrep -a factorio || true').toString(); // @TODO: need to find name of minecraft server process
+                const output = execSync('pgrep -a minecraft || true').toString(); // @TODO: need to find name of minecraft server process
 
                 if (!output) {
                     logger.info('Process successfully shut down!');
