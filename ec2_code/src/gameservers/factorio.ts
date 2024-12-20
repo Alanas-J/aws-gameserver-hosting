@@ -37,20 +37,20 @@ export class FactorioServer implements Gameserver {
         if (existsSync(serverFilepath)) {
             logger.info('Factorio directory detected.')
 
-            if (instanceMeta.tags.gameHostedVersion) {
+            if (instanceMeta.tags.gameserverConfig.factorioVersion) {
                 logger.info('GameHostedVersion provided, checking if same as server output.')
 
                 const serverVersion = this.getServerVersion(factorioExecPath)
-                if (serverVersion !== instanceMeta.tags.gameHostedVersion) {
+                if (serverVersion !== instanceMeta.tags.gameserverConfig.factorioVersion) {
                     logger.info('Server version mismatch in manifest -- performing server install.', 
-                        { installed: serverVersion, received: instanceMeta.tags.gameHostedVersion }
+                        { installed: serverVersion, received: instanceMeta.tags.gameserverConfig.factorioVersion }
                     );
-                    installVersion = instanceMeta.tags.gameHostedVersion;
+                    installVersion = instanceMeta.tags.gameserverConfig.factorioVersion;
                 }
             }
         } else {
             logger.info('No factorio install detected -- performing first time install.');
-            installVersion = instanceMeta.tags?.gameHostedVersion ?? 'stable';
+            installVersion = instanceMeta.tags?.gameserverConfig.factorioVersion ?? 'stable';
         }
 
         if (installVersion) {
