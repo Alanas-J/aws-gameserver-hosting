@@ -121,7 +121,7 @@ export class MinecraftJavaServer implements Gameserver {
     async getStatus() {
         if (['running', 'status-check-error'].includes(this.status.state)) {
             try {
-                logger.info('Fetching factorio server status via RCON...');
+                logger.info('Fetching minecraft server status via RCON...');
                 const rcon = await Rcon.connect(rconConfig)
                 
                 const rconResponse = await rcon.send('list');

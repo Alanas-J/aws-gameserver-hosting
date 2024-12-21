@@ -2,9 +2,13 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import { GameserverStatus, getGameserver } from "../gameservers";
 import logger from "../utils/logger";
 import { getIdleTimeoutTime } from "../utils/idle-server-shutdown";
+import { getSystemCPUUsage, getSystemMemoryUsage, getSystemStorageUsage } from "../utils/system-status";
 
 export interface GameserverStatusResponse extends GameserverStatus {
     idleTimeoutTime?: number
+    ramUse?: string
+    storageUse?: string
+    cpuUse?: string
 }
 
 // Basic caching to prevent endpoint abuse.
@@ -25,8 +29,11 @@ export async function status (_request: FastifyRequest, reply: FastifyReply) {
         try {
             const status = await gameserver.getStatus() as GameserverStatusResponse;
             status.idleTimeoutTime = getIdleTimeoutTime();
-            logger.info('Server status:', { status });
+            status.storageUse = getSystemStorageUsage();
+            status.ramUse = getSystemMemoryUsage();
+            status.cpuUse = getSystemCPUUsage();
 
+            logger.info('Server status:', { status });
             cachedStatusResponse = status;
             cacheExpiryTime = new Date(Date.now() + CACHE_TTL);
             return status;
