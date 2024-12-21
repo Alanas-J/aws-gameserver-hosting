@@ -11,9 +11,9 @@ echo '0: Updating DNF... =======================================================
 dnf update
 
 
-echo '1: Installing Node... ================================================================================'
+echo '1: Installing Node + Java Runtime... ================================================================='
 dnf install -y nodejs # May want to replace later with a specified Node.js version if bugs occur.
-
+sudo dnf install java-23-amazon-corretto -y
 
 echo '2: Server User + Directory Setup... =================================================================='
 useradd -r -m -d "/home/$GAMESERVER_USER" -s /usr/sbin/nologin "$GAMESERVER_USER"

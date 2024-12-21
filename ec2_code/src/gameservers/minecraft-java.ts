@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync } from "fs";
+import { copyFileSync, existsSync, mkdirSync, writeFileSync } from "fs";
 import { Gameserver, GameserverStatus } from ".";
 import { InstanceMetadata } from "../utils/instance-metadata";
 import logger from "../utils/logger";
@@ -26,7 +26,7 @@ export class MinecraftJavaServer implements Gameserver {
             launchTime: new Date().toISOString()
         }
 
-        if (!process.env.GAMESERVER_SERVER_FILES_DIR || !process.env.GAMESERVER_VAR_DIR) {
+        if (!process.env.GAMESERVER_SERVER_FILES_DIR || !process.env.GAMESERVER_VAR_DIR || !process.env.GAMESERVER_CODE_DIR) {
             logger.error('Gameserver path env variables are missing!');
             throw new Error('Gameserver path env variables are missing!');
         }
@@ -43,20 +43,26 @@ export class MinecraftJavaServer implements Gameserver {
             const defaultServerDownloadUrl = 'https://piston-data.mojang.com/v1/objects/4707d00eb834b446575d89a61a11b5d548d8c001/server.jar';
             const downloadUrl = instanceMeta.tags.gameserverConfig.minecraftServerJarUrl ?? defaultServerDownloadUrl;
 
-            logger.info('Downloading server.');
+            logger.info('Installing server...');
             try {
-                // @TODO: mkdir sync.
+                logger.info('Making server directory...');
+                mkdirSync(serverFilepath);
+                
+                logger.info('Downloading server jar...');
                 execSync(`wget -O ${minecraftJarPath} ${downloadUrl}`);
-                logger.info('Server zip downloaded successfully to tmp');
+                
+                logger.info('Agreeing to EULA...');
+                writeFileSync(serverFilepath+'/eula.txt', 'eula=true', 'utf8');
+
+                logger.info('Adding default server properties....');
+                const defaultConfigPath =`${process.env.GAMESERVER_CODE_DIR}/assets/minecraft_default_server.properties`;
+                copyFileSync(defaultConfigPath, `${serverFilepath}/server.properties`);
+
             } catch (error: any) {
-                logger.error('Error downloading file', { errorMessage: error.message, stdError: error?.stderr.toString() });
+                logger.error('Error during server install', { errorMessage: error.message, stdError: error?.stderr.toString() });
                 throw error;
             }
-            
-            // @TODO: Add EULA
-            // @TODO: Copy server config.
-
-            logger.info('Install finished.');
+            logger.info('Install finished!');
         }
 
 
