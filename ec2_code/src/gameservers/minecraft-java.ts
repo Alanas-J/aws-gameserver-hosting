@@ -1,4 +1,4 @@
-import { copyFileSync, existsSync, mkdirSync, writeFileSync } from "fs";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import { Gameserver, GameserverStatus } from ".";
 import { InstanceMetadata } from "../utils/instance-metadata";
 import logger from "../utils/logger";
@@ -33,6 +33,7 @@ export class MinecraftJavaServer implements Gameserver {
 
         const serverFilepath = process.env.GAMESERVER_SERVER_FILES_DIR+'/minecraft_java';
         const minecraftJarPath = `${serverFilepath}/minecraft_server.jar`
+        const minecraftConfigPath = `${serverFilepath}/server.properties`
 
         if (existsSync(serverFilepath)) {
             logger.info('Minecraft directory detected.')
@@ -56,7 +57,7 @@ export class MinecraftJavaServer implements Gameserver {
 
                 logger.info('Adding default server properties....');
                 const defaultConfigPath =`${process.env.GAMESERVER_CODE_DIR}/assets/minecraft_default_server.properties`;
-                copyFileSync(defaultConfigPath, `${serverFilepath}/server.properties`);
+                copyFileSync(defaultConfigPath, minecraftConfigPath);
 
             } catch (error: any) {
                 logger.error('Error during server install', { errorMessage: error.message, stdError: error?.stderr.toString() });
@@ -74,7 +75,11 @@ export class MinecraftJavaServer implements Gameserver {
                 mkdirSync(minecraftLogPath);
             }
 
-            // @TODO: Change RCON password in the server config.
+            logger.info('Writing new generated RCON password into server properties...');
+            const serverConfig = readFileSync(minecraftConfigPath, 'utf8');
+            const updatedConfig = serverConfig.replace(/rcon\.password=.*\n/g, `$rcon.password=${rconConfig.password}\n`);
+            writeFileSync(minecraftConfigPath, updatedConfig, 'utf8');
+
             // @TODO: figure out how much RAM to use
             const ramProvisionMB = 3000;
 
