@@ -1,5 +1,5 @@
 # AWS Game Server Hosting Project
-**Still very much in development but currently working and able to host factorio servers without issue.**
+**Still very much in development but currently working and able to host factorio + java minecraft servers without issue.**
 
 The idea of this AWS stack is to create cheap server hosting by creating on-demand self-stopping servers; this stack when not is only has EC2 EBS Storage costs at $0.08/GB-month of use + sub $0.01 S3 use (unless storing significant save backups).
 
@@ -102,7 +102,7 @@ sudo systemctl restart gameserver
 ### Debugging/Terminal Attached Running
 ```bash
 # Running the Node.js server / attached to your current terminal as the gameserver user.
-sudo -su gameserver-user GAMESERVER_SERVER_FILES_DIR="/opt/server_files" GAMESERVER_VAR_DIR="/var/gameserver" node /opt/gameserver/dist/bundle.js
+sudo -su gameserver-user GAMESERVER_SERVER_FILES_DIR="/opt/server_files" GAMESERVER_VAR_DIR="/var/gameserver" GAMESERVER_CODE_DIR="/opt/gameserver" node /opt/gameserver/dist/bundle.js
 
 # Performing a manual code sync
 sudo -su gameserver-user /opt/gameserver/scripts/utils/code_sync.sh

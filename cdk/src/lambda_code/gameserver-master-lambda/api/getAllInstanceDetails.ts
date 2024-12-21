@@ -34,6 +34,10 @@ export async function getAllInstanceDetails(): Promise<InstanceDetails[]> {
             {
                 Name: 'tag:aws:cloudformation:stack-name',
                 Values: ['GameServerStack']
+            },
+            {
+                Name: 'instance-state-name',
+                Values: ['pending', 'running', 'stopping', 'stopped']
             }
         ]
     });

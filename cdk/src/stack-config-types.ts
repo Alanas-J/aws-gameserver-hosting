@@ -14,11 +14,16 @@ export interface GameserverConfig {
     // Used as the Route 53 subdomain name when provided, otherwise the id is used.
     name?: string 
     // Game hosted on the instance, deploying a new game string + restarting the instance will swap servers.
-    startOnNextBoot: 'minecraft' | 'factorio'
-    version?: string // version to launch / install, if not specified will download latest.
-
-    // On first load of a specific server will pull server files from S3, instead of a fresh install.
-    initFromS3?: string
+    startOnNextBoot: 'minecraft-java' | 'factorio'
+    // Gameserver config
+    config?: {
+        // Where to download the minecraft jar from on initial server setup. 
+        // If not provided will use: https://piston-data.mojang.com/v1/objects/4707d00eb834b446575d89a61a11b5d548d8c001/server.jar
+        minecraftServerJarUrl?: string
+        // What version of server to use (will change versions on boot.) Will download latest if not provided.
+        factorioVersion?: string
+        [key:string]: string | undefined
+    }
     // What type of instance to use.
     instanceType: string
     // Storage

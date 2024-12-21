@@ -36,6 +36,10 @@ export async function getInstanceStatus(serverName: string) {
             {
                 Name: 'tag:ServerName',
                 Values: [serverName]
+            },
+            {
+                Name: 'instance-state-name',
+                Values: ['pending', 'running', 'stopping', 'stopped']
             }
         ]
     });

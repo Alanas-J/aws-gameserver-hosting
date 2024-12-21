@@ -12,6 +12,10 @@ export async function sendInstanceAction(serverName: string, action: 'start' | '
             {
                 Name: 'tag:ServerName',
                 Values: [serverName]
+            },
+            {
+                Name: 'instance-state-name',
+                Values: ['pending', 'running', 'stopping', 'stopped']
             }
         ]
     });

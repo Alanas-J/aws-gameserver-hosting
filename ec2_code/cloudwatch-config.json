@@ -16,6 +16,12 @@
                         "retention_in_days": 7
                     },
                     {
+                        "file_path": "/var/gameserver/logs/minecraft_java/*.log",
+                        "log_group_name": "/gameserver/logs",
+                        "log_stream_name": "{hostname}-{instance_id}-minecraft",
+                        "retention_in_days": 7
+                    },
+                    {
                         "file_path": "/var/log/cloud-init-output.log",
                         "log_group_name": "/gameserver/logs",
                         "log_stream_name": "{hostname}-{instance_id}-instance-init",

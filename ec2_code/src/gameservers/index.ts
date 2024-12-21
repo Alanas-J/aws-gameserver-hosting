@@ -2,6 +2,7 @@ import { startServerIdleCheckLoop } from "../utils/idle-server-shutdown"
 import { InstanceMetadata } from "../utils/instance-metadata"
 import logger from "../utils/logger"
 import { FactorioServer } from "./factorio"
+import { MinecraftJavaServer } from "./minecraft-java"
 
 export interface GameserverStatus {
     state: 'installing' | 'starting' | 'running' | 'shutting-down' | 'stopped/crashed' | 'status-check-error' 
@@ -26,6 +27,9 @@ export function startGameserver(instanceMeta: InstanceMetadata): Gameserver | un
     switch (instanceMeta.tags.gameHosted) {
         case 'factorio':
             gameserver =  new FactorioServer(instanceMeta);
+            break;
+        case 'minecraft-java':
+            gameserver =  new MinecraftJavaServer(instanceMeta);
             break;
     }
 
