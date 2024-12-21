@@ -69,7 +69,7 @@ export async function fetchTagsFromMetadata(metadataServiceToken: string): Promi
         return {
             serverName: instanceTags.ServerName,
             gameHosted: instanceTags.GameHosted as any,
-            gameserverConfig: JSON.parse(instanceTags?.GameserverConfig ?? {}),
+            gameserverConfig: instanceTags?.GameserverConfig as any ?? {} as any,
             domainName: instanceTags?.DomainName,
             hostedZone: instanceTags?.HostedZone
         };

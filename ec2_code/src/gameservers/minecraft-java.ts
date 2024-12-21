@@ -3,14 +3,13 @@ import { Gameserver, GameserverStatus } from ".";
 import { InstanceMetadata } from "../utils/instance-metadata";
 import logger from "../utils/logger";
 import { execSync } from "child_process";
-import crypto from 'crypto';
 import { Rcon } from "rcon-client";
 
 
 const rconConfig = {
     host: 'localhost',
     port: 25575,
-    password: crypto.randomUUID() // Only the server needs to know / will use the RCON client.
+    password: 'RCON_PASSWORD_only_reachable_locally' // Need to change in server.properties aswell.
 }
 
 export class MinecraftJavaServer implements Gameserver {
@@ -75,16 +74,18 @@ export class MinecraftJavaServer implements Gameserver {
                 mkdirSync(minecraftLogPath);
             }
 
-            logger.info('Writing new generated RCON password into server properties...');
-            const serverConfig = readFileSync(minecraftConfigPath, 'utf8');
-            const updatedConfig = serverConfig.replace(/rcon\.password=.*\n/g, `$rcon.password=${rconConfig.password}\n`);
-            writeFileSync(minecraftConfigPath, updatedConfig, 'utf8');
+            /*
+                logger.info('Writing new generated RCON password into server properties...');
+                const serverConfig = readFileSync(minecraftConfigPath, 'utf8');
+                const updatedConfig = serverConfig.replace(/rcon\.password=.*\n/g, `$rcon.password=${rconConfig.password}\n`);
+                writeFileSync(minecraftConfigPath, updatedConfig, 'utf8');
+            */
 
             // @TODO: figure out how much RAM to use
             const ramProvisionMB = 3000;
 
             logger.info('Starting server...');
-            const minecraftStartCmd = `java -Xmx${ramProvisionMB}M -Xms${ramProvisionMB}M -jar ${minecraftJarPath} nogui 2>&1 | tee -a ${minecraftLogPath}/minecraft-${this.status.launchTime}.log`;
+            const minecraftStartCmd = `cd ${serverFilepath} && java -Xmx${ramProvisionMB}M -Xms${ramProvisionMB}M -jar ${minecraftJarPath} nogui 2>&1 | tee -a ${minecraftLogPath}/minecraft-${this.status.launchTime}.log`;
             execSync(`screen -S minecraft-java -d -m bash -c '${minecraftStartCmd}'`);
 
             logger.info('Minecraft Java server started in screen session.');

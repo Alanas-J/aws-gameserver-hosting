@@ -102,7 +102,7 @@ sudo systemctl restart gameserver
 ### Debugging/Terminal Attached Running
 ```bash
 # Running the Node.js server / attached to your current terminal as the gameserver user.
-sudo -su gameserver-user GAMESERVER_SERVER_FILES_DIR="/opt/server_files" GAMESERVER_VAR_DIR="/var/gameserver" node /opt/gameserver/dist/bundle.js
+sudo -su gameserver-user GAMESERVER_SERVER_FILES_DIR="/opt/server_files" GAMESERVER_VAR_DIR="/var/gameserver" GAMESERVER_CODE_DIR="/opt/gameserver" node /opt/gameserver/dist/bundle.js
 
 # Performing a manual code sync
 sudo -su gameserver-user /opt/gameserver/scripts/utils/code_sync.sh
