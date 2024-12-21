@@ -3,13 +3,14 @@ import { Gameserver, GameserverStatus } from ".";
 import { InstanceMetadata } from "../utils/instance-metadata";
 import logger from "../utils/logger";
 import { execSync } from "child_process";
+import crypto from 'crypto';
 import { Rcon } from "rcon-client";
 
 
 const rconConfig = {
     host: 'localhost',
     port: 25575,
-    password: 'RCON_PASSWORD_only_reachable_locally' // Need to change in server.properties aswell.
+    password: crypto.randomUUID()
 }
 
 export class MinecraftJavaServer implements Gameserver {
@@ -74,17 +75,17 @@ export class MinecraftJavaServer implements Gameserver {
                 mkdirSync(minecraftLogPath);
             }
 
-            
             logger.info('Writing new generated RCON password into server properties...');
             const serverConfig = readFileSync(minecraftConfigPath, 'utf8');
             const updatedConfig = serverConfig.replace(/rcon\.password=.*\n/g, `rcon.password=${rconConfig.password}\n`);
             writeFileSync(minecraftConfigPath, updatedConfig, 'utf8');
             
+            logger.info('Calculating memory heap to give to JVM process...');
+            const instanceMemoryMB = parseInt(execSync("free -m | awk '/^Mem:/ {print $2}'").toString());
+            const ramProvisionMB = instanceMemoryMB - 512; // Keeping 512 MB for core system processes, will raise if needed.
+            logger.info('Memory calculated.', { memoryGivenMB: ramProvisionMB, totalSystemMemoryMB: instanceMemoryMB });
 
-            // @TODO: figure out how much RAM to use
-            const ramProvisionMB = 3000;
-
-            logger.info('Starting server...');
+            logger.info('Starting server as a screen process...');
             const minecraftStartCmd = `cd ${serverFilepath} && java -Xmx${ramProvisionMB}M -Xms${ramProvisionMB}M -jar ${minecraftJarPath} nogui 2>&1 | tee -a ${minecraftLogPath}/minecraft-${this.status.launchTime}.log`;
             execSync(`screen -S minecraft-java -d -m bash -c '${minecraftStartCmd}'`);
 
@@ -92,7 +93,7 @@ export class MinecraftJavaServer implements Gameserver {
             this.status.state = 'running';
 
         } catch (error: any) {
-            logger.error('Error starting server in screen', { errorMessage: error.message, stdError: error?.stderr.toString() });
+            logger.error('Error starting server', { errorMessage: error.message, stdError: error?.stderr.toString() });
             this.status.state = 'stopped/crashed';
             throw error;
         }
