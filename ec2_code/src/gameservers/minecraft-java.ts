@@ -74,12 +74,12 @@ export class MinecraftJavaServer implements Gameserver {
                 mkdirSync(minecraftLogPath);
             }
 
-            /*
-                logger.info('Writing new generated RCON password into server properties...');
-                const serverConfig = readFileSync(minecraftConfigPath, 'utf8');
-                const updatedConfig = serverConfig.replace(/rcon\.password=.*\n/g, `$rcon.password=${rconConfig.password}\n`);
-                writeFileSync(minecraftConfigPath, updatedConfig, 'utf8');
-            */
+            
+            logger.info('Writing new generated RCON password into server properties...');
+            const serverConfig = readFileSync(minecraftConfigPath, 'utf8');
+            const updatedConfig = serverConfig.replace(/rcon\.password=.*\n/g, `rcon.password=${rconConfig.password}\n`);
+            writeFileSync(minecraftConfigPath, updatedConfig, 'utf8');
+            
 
             // @TODO: figure out how much RAM to use
             const ramProvisionMB = 3000;
@@ -123,7 +123,7 @@ export class MinecraftJavaServer implements Gameserver {
                 logger.info('Fetching factorio server status via RCON...');
                 const rcon = await Rcon.connect(rconConfig)
                 
-                const rconResponse = await rcon.send('/players online');
+                const rconResponse = await rcon.send('list');
                 logger.info('Players online command response', { rconResponse });
                 const playerCount = rconResponse.match(/There are (\d+) of a max of (\d+)/)?.[1];
     
