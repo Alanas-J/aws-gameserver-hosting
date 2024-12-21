@@ -159,7 +159,7 @@ export class MinecraftJavaServer implements Gameserver {
 
             logger.info('Waiting for server process shutdown...');
             while(true) {
-                const output = execSync('pgrep -a minecraft || true').toString(); // @TODO: need to find name of minecraft server process
+                const output = execSync('pgrep -a java || true').toString(); // Currently the only running java/JVM process, may need to specify better in future.
 
                 if (!output) {
                     logger.info('Process successfully shut down!');
