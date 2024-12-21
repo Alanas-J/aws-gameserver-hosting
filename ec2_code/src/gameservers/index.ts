@@ -9,6 +9,7 @@ export interface GameserverStatus {
     launchTime: string
     playerCount?: number
     serverVersion?: string
+    storageUsage?: string
     additionalServerStats?: {
         [key: string]: any
     }
