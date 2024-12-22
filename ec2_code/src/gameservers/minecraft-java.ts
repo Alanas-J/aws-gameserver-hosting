@@ -31,7 +31,7 @@ export class MinecraftJavaServer implements Gameserver {
             throw new Error('Gameserver path env variables are missing!');
         }
 
-        const serverFilepath = process.env.GAMESERVER_SERVER_FILES_DIR+'/minecraft_java';
+        const serverFilepath = process.env.GAMESERVER_SERVER_FILES_DIR + '/minecraft_java';
         const minecraftJarPath = `${serverFilepath}/minecraft_server.jar`
         const minecraftConfigPath = `${serverFilepath}/server.properties`
 
@@ -48,15 +48,15 @@ export class MinecraftJavaServer implements Gameserver {
             try {
                 logger.info('Making server directory...');
                 mkdirSync(serverFilepath);
-                
+
                 logger.info('Downloading server jar...');
                 execSync(`wget -O ${minecraftJarPath} ${downloadUrl}`);
-                
+
                 logger.info('Agreeing to EULA...');
-                writeFileSync(serverFilepath+'/eula.txt', 'eula=true', 'utf8');
+                writeFileSync(serverFilepath + '/eula.txt', 'eula=true', 'utf8');
 
                 logger.info('Adding default server properties....');
-                const defaultConfigPath =`${process.env.GAMESERVER_CODE_DIR}/assets/minecraft_default_server.properties`;
+                const defaultConfigPath = `${process.env.GAMESERVER_CODE_DIR}/assets/minecraft_default_server.properties`;
                 copyFileSync(defaultConfigPath, minecraftConfigPath);
 
             } catch (error: any) {
@@ -79,7 +79,7 @@ export class MinecraftJavaServer implements Gameserver {
             const serverConfig = readFileSync(minecraftConfigPath, 'utf8');
             const updatedConfig = serverConfig.replace(/rcon\.password=.*\n/g, `rcon.password=${rconConfig.password}\n`);
             writeFileSync(minecraftConfigPath, updatedConfig, 'utf8');
-            
+
             logger.info('Calculating memory heap to give to JVM process...');
             const instanceMemoryMB = parseInt(execSync("free -m | awk '/^Mem:/ {print $2}'").toString());
             const ramProvisionMB = instanceMemoryMB - 512; // Keeping 512 MB for core system processes, will raise if needed.
@@ -121,22 +121,24 @@ export class MinecraftJavaServer implements Gameserver {
     async getStatus() {
         if (['running', 'status-check-error'].includes(this.status.state)) {
             try {
-                logger.info('Fetching factorio server status via RCON...');
+                logger.info('Fetching minecraft server status via RCON...');
                 const rcon = await Rcon.connect(rconConfig)
-                
+
                 const rconResponse = await rcon.send('list');
                 logger.info('Players online command response', { rconResponse });
                 const playerCount = rconResponse.match(/There are (\d+) of a max of (\d+)/)?.[1];
-    
+
                 if (playerCount) {
                     this.status.playerCount = parseInt(playerCount);
+                } else {
+                    logger.error('Could not parse RCON output', { rconResponse });
                 }
-    
-                rcon.end();
+
                 this.status.state = 'running';
                 logger.info('Current minecraft server status', { status: this.status });
+                await rcon.end();
             } catch (error) {
-                logger.error('Error while fetching status via RCON:', { error: error, status: this.status  });
+                logger.error('Error while fetching status via RCON:', { error: error, status: this.status });
                 this.status.state = 'status-check-error';
             }
         }
@@ -158,8 +160,8 @@ export class MinecraftJavaServer implements Gameserver {
             }
 
             logger.info('Waiting for server process shutdown...');
-            while(true) {
-                const output = execSync('pgrep -a minecraft || true').toString(); // @TODO: need to find name of minecraft server process
+            while (true) {
+                const output = execSync('pgrep -a java || true').toString(); // Currently the only running java/JVM process, may need to specify better in future.
 
                 if (!output) {
                     logger.info('Process successfully shut down!');
@@ -171,8 +173,8 @@ export class MinecraftJavaServer implements Gameserver {
             }
 
         } catch (error: any) {
-            logger.error('Error shutting server down gracefully.', { 
-                errorMessage: error.message, 
+            logger.error('Error shutting server down gracefully.', {
+                errorMessage: error.message,
                 stdError: error?.stderr?.toString(),
                 stdOut: error?.stdout?.toString(),
             });
