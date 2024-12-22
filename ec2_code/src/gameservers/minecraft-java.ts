@@ -82,7 +82,7 @@ export class MinecraftJavaServer implements Gameserver {
 
             logger.info('Calculating memory heap to give to JVM process...');
             const instanceMemoryMB = parseInt(execSync("free -m | awk '/^Mem:/ {print $2}'").toString());
-            const ramProvisionMB = instanceMemoryMB - 512; // Keeping 512 MB for core system processes, will raise if needed.
+            const ramProvisionMB = instanceMemoryMB - 768; // Keeping 768 MB for core system processes, will raise if needed.
             logger.info('Memory calculated.', { memoryGivenMB: ramProvisionMB, totalSystemMemoryMB: instanceMemoryMB });
 
             logger.info('Starting server as a screen process...');
