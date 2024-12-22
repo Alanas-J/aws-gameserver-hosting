@@ -6,6 +6,7 @@ import { FunctionUrl, FunctionUrlAuthType, InvokeMode, Runtime } from "aws-cdk-l
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { RetentionDays } from "aws-cdk-lib/aws-logs";
 import { Construct } from "constructs";
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 import path = require("path");
 import { stackConfig } from "../../stack-config";
 import { HttpOrigin } from "aws-cdk-lib/aws-cloudfront-origins";
@@ -63,9 +64,6 @@ export class ServerMasterLambdaConstruct extends Construct {
                 },
             },
             role: this.lambdaRole,
-            environment: {
-                AUTH_PASSWORD: stackConfig.LAMBDA_PASSWORD
-            }
             // reservedConcurrentExecutions: 1 // @TODO: disabled since my account is at 10 concurrency so I can't reserve/limit this lambda
 
         })
