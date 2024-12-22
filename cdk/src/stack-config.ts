@@ -1,6 +1,6 @@
 import { RemovalPolicy } from "aws-cdk-lib";
 import { GameserverConfig, IPPrefixLists } from "./stack-config-types";
-import { CLOUDFRONT_SSL_CERTIFICATE_ARN, GAMEMASTER_LAMBDA_PASSWORD, ROUTE53_ZONE_ID } from "./personal_config";
+import { CLOUDFRONT_SSL_CERTIFICATE_ARN, GAMEMASTER_LAMBDA_PASSWORD, MINECRAFT_FULL_PASSWORD, MINECRAFT_START_PASSWORD, ROUTE53_ZONE_ID } from "./personal_config";
 
 export const serverInstances: GameserverConfig[] = [
     {
@@ -17,6 +17,10 @@ export const serverInstances: GameserverConfig[] = [
         instanceType: 'c6a.large',
         config: { 
             minecraftServerJarUrl: 'https://api.papermc.io/v2/projects/paper/versions/1.21.3/builds/81/downloads/paper-1.21.3-81.jar'
+        },
+        passwords: {
+            instanceStart: MINECRAFT_START_PASSWORD,
+            full: MINECRAFT_FULL_PASSWORD
         },
         ssdStorageCapacityGiB: 8 // $0.64 per month; 8GB expected just for the EC2 Amazon Linux snapshot.
     },
@@ -35,8 +39,8 @@ export const stackConfig = {
     ROUTE53_ZONE_ID: ROUTE53_ZONE_ID,
     DOMAIN_NAME: 'alanas-j.site',
 
-    // A string password to protect EC2 instance start/stop/restart actions.
-    LAMBDA_PASSWORD: GAMEMASTER_LAMBDA_PASSWORD,
+    // The password to allow the start/stopping of all instances.
+    MASTER_PASSWORD: GAMEMASTER_LAMBDA_PASSWORD,
 
     // Only applies if ENABLE_ROUTE_53_MAPPING is true.
     LAMBDA_VANITY_URL: {

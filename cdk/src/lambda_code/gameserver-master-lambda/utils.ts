@@ -1,4 +1,5 @@
 import { EC2Client } from "@aws-sdk/client-ec2";
+import { serverInstances, stackConfig } from "../../stack-config";
 
 export interface LambdaFunctionUrlEvent { // A map of all used variables, a dedicated type doesn't exist.
     requestContext: {
@@ -29,3 +30,28 @@ export function RequestTimeoutSignal (time: number) {
 
 // To only have one instance of the EC2Client
 export const ec2Client = new EC2Client();
+
+
+// Simple password protection
+export function checkInstanceFullAccess(instanceName: string, password: string): boolean {
+    if (password === stackConfig.MASTER_PASSWORD) {
+        return true;
+    } else {
+        const instance = serverInstances.find((server) => server.name === instanceName);
+        if (instance?.passwords?.full && instance?.passwords?.full === password) {
+            return true;
+        }
+    }
+    return false;
+}
+export function checkInstanceStartAccess(instanceName: string, password: string): boolean {
+    if (checkInstanceFullAccess(instanceName, password)) {
+        return true;
+    } else {
+        const instance = serverInstances.find((server) => server.name === instanceName);
+        if (instance?.passwords?.instanceStart && instance?.passwords?.instanceStart === password) {
+            return true;
+        }
+    }
+    return false;
+}
