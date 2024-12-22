@@ -11,10 +11,13 @@ export const serverInstances: GameserverConfig[] = [
         ssdStorageCapacityGiB: 8 // $0.64 per month; 8GB expected just for the EC2 Amazon Linux snapshot.
     },
     {
-        id: 'gameserver_2',
+        id: 'gameserver_minecraft',
         name: 'minecraft',
         startOnNextBoot: 'minecraft-java',
         instanceType: 'c6a.large',
+        config: { 
+            minecraftServerJarUrl: 'https://api.papermc.io/v2/projects/paper/versions/1.21.3/builds/81/downloads/paper-1.21.3-81.jar'
+        },
         ssdStorageCapacityGiB: 8 // $0.64 per month; 8GB expected just for the EC2 Amazon Linux snapshot.
     },
 ]
