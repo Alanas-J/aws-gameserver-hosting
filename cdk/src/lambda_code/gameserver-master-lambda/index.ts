@@ -1,4 +1,4 @@
-import { httpResponse, LambdaFunctionUrlEvent } from './utils';
+import { checkInstanceFullAccess, checkInstanceStartAccess, httpResponse, LambdaFunctionUrlEvent } from './utils';
 import { getAllInstanceDetails } from "./api/getAllInstanceDetails";
 import { getInstanceStatus } from "./api/getInstanceStatus";
 import { sendInstanceAction } from './api/sendInstanceAction';
@@ -17,11 +17,16 @@ export async function handler (event: LambdaFunctionUrlEvent) {
             case 'instance': 
                 switch(instanceAction) {
                     case 'start':
+                        if (checkInstanceStartAccess(instanceName, event.headers.authorization)) {
+                            return await sendInstanceAction(instanceName, instanceAction as any);
+                        } else {
+                            return httpResponse({ message: 'Unauthorized.' }, 401);
+                        }
+
                     case 'restart':
                     case 'stop':
-                        if (event.headers.authorization === process.env.AUTH_PASSWORD) {
+                        if (checkInstanceFullAccess(instanceName, event.headers.authorization)) {
                             return await sendInstanceAction(instanceName, instanceAction as any);
-    
                         } else {
                             return httpResponse({ message: 'Unauthorized.' }, 401);
                         }

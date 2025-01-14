@@ -23,9 +23,16 @@ export interface GameserverConfig {
         // What version of server to use (will change versions on boot.) Will download latest if not provided.
         factorioVersion?: string
         [key:string]: string | undefined
-    }
+    },
     // What type of instance to use.
     instanceType: string
     // Storage
-    ssdStorageCapacityGiB: number
+    ssdStorageCapacityGiB: number,
+    // Ability to configure optional per gameserver passwords.
+    // Not intended to protect against malicious users
+    // Purely exists to protect less tech savvy users from corrupting server data by instance stops/restarts.
+    passwords?: {
+        instanceStart?: string,
+        full?: string
+    }
 }
