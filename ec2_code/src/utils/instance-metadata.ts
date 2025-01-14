@@ -12,7 +12,11 @@ export interface InstanceMetadata {
         serverName: string
         gameHosted: 'minecraft-java' | 'factorio'
         gameserverConfig: {
+            // Minecraft Settings
             minecraftServerJarUrl?: string
+            forgeZipUrl?: string
+            startScriptPath?: string
+            // Factorio settings
             factorioVersion?: string
             [key:string]: string | undefined
         }

@@ -6,7 +6,6 @@ import { execSync } from "child_process";
 import crypto from 'crypto';
 import { Rcon } from "rcon-client";
 
-
 const rconConfig = {
     host: 'localhost',
     port: 25575,
@@ -41,16 +40,18 @@ export class MinecraftJavaServer implements Gameserver {
         } else {
             logger.info('No minecraft java install detected -- performing first time install.');
             this.status.state = 'installing';
-            const defaultServerDownloadUrl = 'https://piston-data.mojang.com/v1/objects/4707d00eb834b446575d89a61a11b5d548d8c001/server.jar';
-            const downloadUrl = instanceMeta.tags.gameserverConfig.minecraftServerJarUrl ?? defaultServerDownloadUrl;
+
 
             logger.info('Installing server...');
             try {
                 logger.info('Making server directory...');
                 mkdirSync(serverFilepath);
 
-                logger.info('Downloading server jar...');
-                execSync(`wget -O ${minecraftJarPath} ${downloadUrl}`);
+                if (instanceMeta.tags.gameserverConfig.forgeZipUrl) {
+                    this.installFromZip();
+                } else {
+                    this.installJar(instanceMeta, minecraftJarPath);
+                }
 
                 logger.info('Agreeing to EULA...');
                 writeFileSync(serverFilepath + '/eula.txt', 'eula=true', 'utf8');
@@ -80,14 +81,12 @@ export class MinecraftJavaServer implements Gameserver {
             const updatedConfig = serverConfig.replace(/rcon\.password=.*\n/g, `rcon.password=${rconConfig.password}\n`);
             writeFileSync(minecraftConfigPath, updatedConfig, 'utf8');
 
-            logger.info('Calculating memory heap to give to JVM process...');
-            const instanceMemoryMB = parseInt(execSync("free -m | awk '/^Mem:/ {print $2}'").toString());
-            const ramProvisionMB = instanceMemoryMB - 1024; // Keeping 1024 MB for core system Should be more than plenty
-            logger.info('Memory calculated.', { memoryGivenMB: ramProvisionMB, totalSystemMemoryMB: instanceMemoryMB });
-
-            logger.info('Starting server as a screen process...');
-            const minecraftStartCmd = `cd ${serverFilepath} && java -Xmx${ramProvisionMB}M -Xms${ramProvisionMB}M -jar ${minecraftJarPath} nogui 2>&1 | tee -a ${minecraftLogPath}/minecraft-${this.status.launchTime}.log`;
-            execSync(`screen -S minecraft-java -d -m bash -c '${minecraftStartCmd}'`);
+            if (instanceMeta.tags.gameserverConfig.startScriptPath) {
+                const startScriptPath = instanceMeta.tags.gameserverConfig.startScriptPath;
+                this.serverScriptStart(serverConfig, startScriptPath, minecraftLogPath);
+            } else {
+                this.serverJarStart(serverFilepath, minecraftJarPath, minecraftLogPath);
+            }
 
             logger.info('Minecraft Java server started in screen session.');
             this.status.state = 'running';
@@ -117,6 +116,34 @@ export class MinecraftJavaServer implements Gameserver {
         }, 5000);
     }
 
+    serverJarStart(serverFilepath: string, minecraftJarPath: string, minecraftLogPath: string) {
+        logger.info('Direct server jar start... Calculating memory heap to give to JVM process...');
+        const instanceMemoryMB = parseInt(execSync("free -m | awk '/^Mem:/ {print $2}'").toString());
+        const ramProvisionMB = instanceMemoryMB - 1024; // Keeping 1024 MB for core system Should be more than plenty
+        logger.info('Memory calculated.', { memoryGivenMB: ramProvisionMB, totalSystemMemoryMB: instanceMemoryMB });
+
+        logger.info('Starting server as a screen process...');
+        const minecraftStartCmd = `cd ${serverFilepath} && java -Xmx${ramProvisionMB}M -Xms${ramProvisionMB}M -jar ${minecraftJarPath} nogui 2>&1 | tee -a ${minecraftLogPath}/minecraft-${this.status.launchTime}.log`;
+        execSync(`screen -S minecraft-java -d -m bash -c '${minecraftStartCmd}'`);
+    }
+
+    serverScriptStart(serverFilepath: string, scriptFilepath: string, minecraftLogPath: string) {
+        logger.info('Starting server as a screen process...');
+        const minecraftStartCmd = `cd ${serverFilepath} && .${scriptFilepath} nogui 2>&1 | tee -a ${minecraftLogPath}/minecraft-${this.status.launchTime}.log`;
+        execSync(`screen -S minecraft-java -d -m bash -c '${minecraftStartCmd}'`);
+    }
+
+    installJar(instanceMeta: InstanceMetadata, minecraftJarPath: string) {
+        const defaultServerDownloadUrl = 'https://piston-data.mojang.com/v1/objects/4707d00eb834b446575d89a61a11b5d548d8c001/server.jar';
+        const downloadUrl = instanceMeta.tags.gameserverConfig.minecraftServerJarUrl ?? defaultServerDownloadUrl;
+
+        logger.info('Downloading server jar...');
+        execSync(`wget -O ${minecraftJarPath} ${downloadUrl}`);
+    }
+
+    installFromZip() {
+
+    }
 
     async getStatus() {
         if (['running', 'status-check-error'].includes(this.status.state)) {

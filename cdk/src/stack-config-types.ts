@@ -26,6 +26,7 @@ export interface GameserverConfig {
         instanceStart?: string,
         full?: string
     }
+    config?: unknown
 }
 
 export interface MinecraftJavaConfig extends GameserverConfig {

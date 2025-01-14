@@ -1,15 +1,9 @@
 import { RemovalPolicy } from "aws-cdk-lib";
-import { GameserverConfig, IPPrefixLists } from "./stack-config-types";
+import { GameserverConfig, IPPrefixLists, MinecraftJavaConfig } from "./stack-config-types";
 import { CLOUDFRONT_SSL_CERTIFICATE_ARN, GAMEMASTER_LAMBDA_PASSWORD, MINECRAFT_FULL_PASSWORD, MINECRAFT_START_PASSWORD, ROUTE53_ZONE_ID } from "./personal_config";
 
+// Server instances the stack will create
 export const serverInstances: GameserverConfig[] = [
-    {
-        id: 'gameserver_1',
-        name: 'factorio',
-        startOnNextBoot: 'factorio',
-        instanceType: 't3a.small',
-        ssdStorageCapacityGiB: 8 // $0.64 per month; 8GB expected just for the EC2 Amazon Linux snapshot.
-    },
     {
         id: 'gameserver_minecraft',
         name: 'minecraft',
@@ -23,7 +17,22 @@ export const serverInstances: GameserverConfig[] = [
             full: MINECRAFT_FULL_PASSWORD
         },
         ssdStorageCapacityGiB: 8 // $0.64 per month; 8GB expected just for the EC2 Amazon Linux snapshot.
-    },
+    } as MinecraftJavaConfig,
+    {
+        id: 'gameserver_modded_mc',
+        name: 'industrial-village-mc',
+        startOnNextBoot: 'minecraft-java',
+        instanceType: 'c6a.xlarge',
+        config: { 
+            forgeZipUrl: 'https://www.curseforge.com/minecraft/modpacks/industrial-village/download/5897310',
+            startScriptPath: '/run.sh'
+        },
+        passwords: {
+            instanceStart: MINECRAFT_START_PASSWORD,
+            full: MINECRAFT_FULL_PASSWORD
+        },
+        ssdStorageCapacityGiB: 8 // $0.64 per month; 8GB expected just for the EC2 Amazon Linux snapshot.
+    } as MinecraftJavaConfig,
 ]
 
 export const stackConfig = {
