@@ -15,15 +15,6 @@ export interface GameserverConfig {
     name?: string 
     // Game hosted on the instance, deploying a new game string + restarting the instance will swap servers.
     startOnNextBoot: 'minecraft-java' | 'factorio'
-    // Gameserver config
-    config?: {
-        // Where to download the minecraft jar from on initial server setup. 
-        // If not provided will use: https://piston-data.mojang.com/v1/objects/4707d00eb834b446575d89a61a11b5d548d8c001/server.jar
-        minecraftServerJarUrl?: string
-        // What version of server to use (will change versions on boot.) Will download latest if not provided.
-        factorioVersion?: string
-        [key:string]: string | undefined
-    },
     // What type of instance to use.
     instanceType: string
     // Storage
@@ -34,5 +25,25 @@ export interface GameserverConfig {
     passwords?: {
         instanceStart?: string,
         full?: string
+    }
+}
+
+export interface MinecraftJavaConfig extends GameserverConfig {
+    config?: {
+        // Where to download the minecraft jar from on initial server setup. 
+        // If not provided will use: https://piston-data.mojang.com/v1/objects/4707d00eb834b446575d89a61a11b5d548d8c001/server.jar
+        minecraftServerJarUrl?: string
+        // Alternative to a server jar url, modded server zip url to intialise the server with.
+        forgeZipUrl?: string
+        // Instead of running the Jar directly, a shell script for starting the server can be provided.
+        // (Common for modded servers)
+        startScriptPath?: string
+    }
+}
+
+export interface FactorioConfig extends GameserverConfig {
+    config?: {
+        // What version of server to use (will change versions on boot.) Will download latest if not provided.
+        factorioVersion?: string
     }
 }
