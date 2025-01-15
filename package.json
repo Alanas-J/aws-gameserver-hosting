@@ -7,7 +7,8 @@
     "install:cdk": "cd ./cdk && npm i",
     "install:ec2_code": "cd ./ec2_code && npm i",
     "install": "npm run install:cdk && npm run install:ec2_code",
-    "deploy": "npm --prefix ./ec2_code run bundle && cd ./cdk && cdk deploy"
+    "deploy": "npm --prefix ./ec2_code run bundle && cd ./cdk && cdk deploy",
+    "diff": "npm --prefix ./ec2_code run bundle && cd ./cdk && cdk diff"
   },
   "author": "Alanas J",
   "devDependencies": {
