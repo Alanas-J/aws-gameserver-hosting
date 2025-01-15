@@ -34,8 +34,9 @@ export interface MinecraftJavaConfig extends GameserverConfig {
         // Where to download the minecraft jar from on initial server setup. 
         // If not provided will use: https://piston-data.mojang.com/v1/objects/4707d00eb834b446575d89a61a11b5d548d8c001/server.jar
         minecraftServerJarUrl?: string
-        // Alternative to a server jar url, modded server zip url to intialise the server with.
-        forgeZipUrl?: string
+        // Alternative to providing a minecraftServerJarUrl, a server copy stored on S3 can be used.
+        // This is a way of loading backups + modded minecraft servers.
+        installFromS3Url?: string
         // Instead of running the Jar directly, a shell script for starting the server can be provided.
         // (Common for modded servers)
         startScriptPath?: string

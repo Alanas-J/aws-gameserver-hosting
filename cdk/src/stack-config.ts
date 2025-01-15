@@ -1,6 +1,6 @@
 import { RemovalPolicy } from "aws-cdk-lib";
 import { GameserverConfig, IPPrefixLists, MinecraftJavaConfig } from "./stack-config-types";
-import { CLOUDFRONT_SSL_CERTIFICATE_ARN, GAMEMASTER_LAMBDA_PASSWORD, MINECRAFT_FULL_PASSWORD, MINECRAFT_START_PASSWORD, ROUTE53_ZONE_ID } from "./personal_config";
+import { CLOUDFRONT_SSL_CERTIFICATE_ARN, GAMEMASTER_LAMBDA_PASSWORD, IV_FULL_PASSWORD, IV_START_PASSWORD, MINECRAFT_FULL_PASSWORD, MINECRAFT_START_PASSWORD, ROUTE53_ZONE_ID } from "./personal_config";
 
 // Server instances the stack will create
 export const serverInstances: GameserverConfig[] = [
@@ -24,12 +24,12 @@ export const serverInstances: GameserverConfig[] = [
         startOnNextBoot: 'minecraft-java',
         instanceType: 'c6a.xlarge',
         config: { 
-            forgeZipUrl: 'https://www.curseforge.com/minecraft/modpacks/industrial-village/download/5897310',
+            initFromS3Url: 's3://gameserverstack-s3storagebucketcf59ebf7-hidmmd95ycsc/server_backups/minecraft/industrial_village_1.20.1',
             startScriptPath: '/run.sh'
         },
         passwords: {
-            instanceStart: MINECRAFT_START_PASSWORD,
-            full: MINECRAFT_FULL_PASSWORD
+            instanceStart: IV_START_PASSWORD,
+            full: IV_FULL_PASSWORD
         },
         ssdStorageCapacityGiB: 8 // $0.64 per month; 8GB expected just for the EC2 Amazon Linux snapshot.
     } as MinecraftJavaConfig,

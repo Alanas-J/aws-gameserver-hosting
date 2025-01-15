@@ -47,18 +47,11 @@ export class MinecraftJavaServer implements Gameserver {
                 logger.info('Making server directory...');
                 mkdirSync(serverFilepath);
 
-                if (instanceMeta.tags.gameserverConfig.forgeZipUrl) {
-                    this.installFromZip();
+                if (instanceMeta.tags.gameserverConfig.installFromS3Url) {
+                    this.installFromS3(instanceMeta, serverFilepath);
                 } else {
-                    this.installJar(instanceMeta, minecraftJarPath);
+                    this.installJar(instanceMeta, minecraftJarPath, serverFilepath, minecraftConfigPath);
                 }
-
-                logger.info('Agreeing to EULA...');
-                writeFileSync(serverFilepath + '/eula.txt', 'eula=true', 'utf8');
-
-                logger.info('Adding default server properties....');
-                const defaultConfigPath = `${process.env.GAMESERVER_CODE_DIR}/assets/minecraft_default_server.properties`;
-                copyFileSync(defaultConfigPath, minecraftConfigPath);
 
             } catch (error: any) {
                 logger.error('Error during server install', { errorMessage: error.message, stdError: error?.stderr.toString() });
@@ -133,16 +126,25 @@ export class MinecraftJavaServer implements Gameserver {
         execSync(`screen -S minecraft-java -d -m bash -c '${minecraftStartCmd}'`);
     }
 
-    installJar(instanceMeta: InstanceMetadata, minecraftJarPath: string) {
+    installJar(instanceMeta: InstanceMetadata, minecraftJarPath: string, serverFilepath: string, minecraftConfigPath: string) {
         const defaultServerDownloadUrl = 'https://piston-data.mojang.com/v1/objects/4707d00eb834b446575d89a61a11b5d548d8c001/server.jar';
         const downloadUrl = instanceMeta.tags.gameserverConfig.minecraftServerJarUrl ?? defaultServerDownloadUrl;
 
         logger.info('Downloading server jar...');
         execSync(`wget -O ${minecraftJarPath} ${downloadUrl}`);
+
+        logger.info('Agreeing to EULA...');
+        writeFileSync(serverFilepath + '/eula.txt', 'eula=true', 'utf8');
+
+        logger.info('Adding default server properties....');
+        const defaultConfigPath = `${process.env.GAMESERVER_CODE_DIR}/assets/minecraft_default_server.properties`;
+        copyFileSync(defaultConfigPath, minecraftConfigPath);
     }
 
-    installFromZip() {
-
+    installFromS3(instanceMeta: InstanceMetadata, serverFilepath: string) {
+        const s3Url = instanceMeta.tags.gameserverConfig.installFromS3Url
+        logger.info('Downloading server files from s3...', { s3Url });
+        execSync(`aws s3 sync ${s3Url}/ ${serverFilepath}`);
     }
 
     async getStatus() {

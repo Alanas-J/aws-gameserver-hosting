@@ -14,7 +14,7 @@ export interface InstanceMetadata {
         gameserverConfig: {
             // Minecraft Settings
             minecraftServerJarUrl?: string
-            forgeZipUrl?: string
+            installFromS3Url?: string
             startScriptPath?: string
             // Factorio settings
             factorioVersion?: string
