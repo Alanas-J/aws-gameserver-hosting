@@ -10,7 +10,7 @@ export enum IPPrefixLists {
 export interface GameserverConfig {
     // Used to identify the specific instance + becomes the subdomain name if name is not provided.
     // WARNING: this acts as the logical id for CloudFormation to track, a change causes resource recreation.
-    id: string,
+    logicalId: string,
     // Used as the Route 53 subdomain name when provided, otherwise the id is used.
     name?: string 
     // Game hosted on the instance, deploying a new game string + restarting the instance will swap servers.

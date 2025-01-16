@@ -5,7 +5,7 @@ import { CLOUDFRONT_SSL_CERTIFICATE_ARN, GAMEMASTER_LAMBDA_PASSWORD, IV_FULL_PAS
 // Server instances the stack will create
 export const serverInstances: GameserverConfig[] = [
     {
-        id: 'gameserver_minecraft',
+        logicalId: 'VanillaMC',
         name: 'minecraft',
         startOnNextBoot: 'minecraft-java',
         instanceType: 'c6a.xlarge',
@@ -19,12 +19,12 @@ export const serverInstances: GameserverConfig[] = [
         ssdStorageCapacityGiB: 8 // $0.64 per month; 8GB expected just for the EC2 Amazon Linux snapshot.
     } as MinecraftJavaConfig,
     {
-        id: 'gameserver_modded_mc',
+        logicalId: 'IndustrialVillageMC',
         name: 'industrial-village-mc',
         startOnNextBoot: 'minecraft-java',
         instanceType: 'c6a.xlarge',
         config: { 
-            initFromS3Url: 's3://gameserverstack-s3storagebucketcf59ebf7-hidmmd95ycsc/server_backups/minecraft/industrial_village_1.20.1',
+            installFromS3Url: 's3://gameserverstack-s3storagebucketcf59ebf7-hidmmd95ycsc/server_backups/minecraft/industrial_village_1.20.1',
             startScriptPath: '/run.sh'
         },
         passwords: {

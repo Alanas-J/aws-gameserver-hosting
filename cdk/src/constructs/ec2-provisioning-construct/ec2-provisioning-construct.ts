@@ -124,9 +124,9 @@ export class EC2ProvisioningConstruct extends Construct {
 
         // Gameserver provisioning
         this.gameservers = serverInstances.map((instanceConfig) => {
-            const serverName = instanceConfig.name ?? instanceConfig.id;
+            const serverName = instanceConfig.name ?? instanceConfig.logicalId;
 
-            const instance = new CfnInstance(this, instanceConfig.id, {
+            const instance = new CfnInstance(this, instanceConfig.logicalId, {
                 launchTemplate: {
                     launchTemplateId: launchTemplate.ref,
                     version: launchTemplate.attrLatestVersionNumber,
@@ -143,7 +143,10 @@ export class EC2ProvisioningConstruct extends Construct {
                 }]
             });
 
-            Tags.of(instance).add('Name', 'GameserverStackEC2Provision/'+instanceConfig.id);
+            // Setting a hardcoded logical id to prevent accidental instance deletion 
+            instance.overrideLogicalId('GameserverEC2'+instanceConfig.logicalId);
+
+            Tags.of(instance).add('Name', 'GameserverStackEC2Provision/'+instanceConfig.logicalId);
             Tags.of(instance).add('ServerName', serverName);
             Tags.of(instance).add('GameHosted', instanceConfig.startOnNextBoot);
             Tags.of(instance).add('GameserverConfig', JSON.stringify(instanceConfig?.config ?? {}));
