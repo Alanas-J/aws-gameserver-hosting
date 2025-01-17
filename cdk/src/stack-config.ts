@@ -8,7 +8,7 @@ export const serverInstances: GameserverConfig[] = [
         logicalId: 'VanillaMC',
         name: 'minecraft',
         startOnNextBoot: 'minecraft-java',
-        instanceType: 'c6a.xlarge',
+        instanceType: 'c6a.large',
         config: { 
             minecraftServerJarUrl: 'https://api.papermc.io/v2/projects/paper/versions/1.21.3/builds/81/downloads/paper-1.21.3-81.jar'
         },

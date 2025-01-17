@@ -138,12 +138,12 @@ export class EC2ProvisioningConstruct extends Construct {
                     ebs: {
                         volumeSize: instanceConfig.ssdStorageCapacityGiB,
                         volumeType: EbsDeviceVolumeType.GP3,
-                        deleteOnTermination: true
+                        deleteOnTermination: false // I've decided to retain EBS volumes, this prevents you from shooting yourself in the foot with an accidental server file delete.
                     }
                 }]
             });
 
-            // Setting a hardcoded logical id to prevent accidental instance deletion 
+            // Setting a hardcoded logical id to prevent accidental instance deletion (if userdata script/launch template changes it's still powerless)
             instance.overrideLogicalId('GameserverEC2'+instanceConfig.logicalId);
 
             Tags.of(instance).add('Name', 'GameserverStackEC2Provision/'+instanceConfig.logicalId);
