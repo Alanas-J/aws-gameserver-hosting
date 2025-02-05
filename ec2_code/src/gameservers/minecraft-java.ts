@@ -6,7 +6,6 @@ import { execSync } from "child_process";
 import crypto from 'crypto';
 import { Rcon } from "rcon-client";
 
-
 const rconConfig = {
     host: 'localhost',
     port: 25575,
@@ -41,23 +40,18 @@ export class MinecraftJavaServer implements Gameserver {
         } else {
             logger.info('No minecraft java install detected -- performing first time install.');
             this.status.state = 'installing';
-            const defaultServerDownloadUrl = 'https://piston-data.mojang.com/v1/objects/4707d00eb834b446575d89a61a11b5d548d8c001/server.jar';
-            const downloadUrl = instanceMeta.tags.gameserverConfig.minecraftServerJarUrl ?? defaultServerDownloadUrl;
+
 
             logger.info('Installing server...');
             try {
                 logger.info('Making server directory...');
                 mkdirSync(serverFilepath);
 
-                logger.info('Downloading server jar...');
-                execSync(`wget -O ${minecraftJarPath} ${downloadUrl}`);
-
-                logger.info('Agreeing to EULA...');
-                writeFileSync(serverFilepath + '/eula.txt', 'eula=true', 'utf8');
-
-                logger.info('Adding default server properties....');
-                const defaultConfigPath = `${process.env.GAMESERVER_CODE_DIR}/assets/minecraft_default_server.properties`;
-                copyFileSync(defaultConfigPath, minecraftConfigPath);
+                if (instanceMeta.tags.gameserverConfig.installFromS3Url) {
+                    this.installFromS3(instanceMeta, serverFilepath);
+                } else {
+                    this.installJar(instanceMeta, minecraftJarPath, serverFilepath, minecraftConfigPath);
+                }
 
             } catch (error: any) {
                 logger.error('Error during server install', { errorMessage: error.message, stdError: error?.stderr.toString() });
@@ -80,14 +74,12 @@ export class MinecraftJavaServer implements Gameserver {
             const updatedConfig = serverConfig.replace(/rcon\.password=.*\n/g, `rcon.password=${rconConfig.password}\n`);
             writeFileSync(minecraftConfigPath, updatedConfig, 'utf8');
 
-            logger.info('Calculating memory heap to give to JVM process...');
-            const instanceMemoryMB = parseInt(execSync("free -m | awk '/^Mem:/ {print $2}'").toString());
-            const ramProvisionMB = instanceMemoryMB - 768; // Keeping 768 MB for core system processes, will raise if needed.
-            logger.info('Memory calculated.', { memoryGivenMB: ramProvisionMB, totalSystemMemoryMB: instanceMemoryMB });
-
-            logger.info('Starting server as a screen process...');
-            const minecraftStartCmd = `cd ${serverFilepath} && java -Xmx${ramProvisionMB}M -Xms${ramProvisionMB}M -jar ${minecraftJarPath} nogui 2>&1 | tee -a ${minecraftLogPath}/minecraft-${this.status.launchTime}.log`;
-            execSync(`screen -S minecraft-java -d -m bash -c '${minecraftStartCmd}'`);
+            if (instanceMeta.tags.gameserverConfig.startScriptPath) {
+                const startScriptPath = instanceMeta.tags.gameserverConfig.startScriptPath;
+                this.serverScriptStart(serverConfig, startScriptPath, minecraftLogPath);
+            } else {
+                this.serverJarStart(serverFilepath, minecraftJarPath, minecraftLogPath);
+            }
 
             logger.info('Minecraft Java server started in screen session.');
             this.status.state = 'running';
@@ -117,6 +109,43 @@ export class MinecraftJavaServer implements Gameserver {
         }, 5000);
     }
 
+    serverJarStart(serverFilepath: string, minecraftJarPath: string, minecraftLogPath: string) {
+        logger.info('Direct server jar start... Calculating memory heap to give to JVM process...');
+        const instanceMemoryMB = parseInt(execSync("free -m | awk '/^Mem:/ {print $2}'").toString());
+        const ramProvisionMB = instanceMemoryMB - 1024; // Keeping 1024 MB for core system Should be more than plenty
+        logger.info('Memory calculated.', { memoryGivenMB: ramProvisionMB, totalSystemMemoryMB: instanceMemoryMB });
+
+        logger.info('Starting server as a screen process...');
+        const minecraftStartCmd = `cd ${serverFilepath} && java -Xmx${ramProvisionMB}M -Xms${ramProvisionMB}M -jar ${minecraftJarPath} nogui 2>&1 | tee -a ${minecraftLogPath}/minecraft-${this.status.launchTime}.log`;
+        execSync(`screen -S minecraft-java -d -m bash -c '${minecraftStartCmd}'`);
+    }
+
+    serverScriptStart(serverFilepath: string, scriptFilepath: string, minecraftLogPath: string) {
+        logger.info('Starting server as a screen process...');
+        const minecraftStartCmd = `cd ${serverFilepath} && .${scriptFilepath} nogui 2>&1 | tee -a ${minecraftLogPath}/minecraft-${this.status.launchTime}.log`;
+        execSync(`screen -S minecraft-java -d -m bash -c '${minecraftStartCmd}'`);
+    }
+
+    installJar(instanceMeta: InstanceMetadata, minecraftJarPath: string, serverFilepath: string, minecraftConfigPath: string) {
+        const defaultServerDownloadUrl = 'https://piston-data.mojang.com/v1/objects/4707d00eb834b446575d89a61a11b5d548d8c001/server.jar';
+        const downloadUrl = instanceMeta.tags.gameserverConfig.minecraftServerJarUrl ?? defaultServerDownloadUrl;
+
+        logger.info('Downloading server jar...');
+        execSync(`wget -O ${minecraftJarPath} ${downloadUrl}`);
+
+        logger.info('Agreeing to EULA...');
+        writeFileSync(serverFilepath + '/eula.txt', 'eula=true', 'utf8');
+
+        logger.info('Adding default server properties....');
+        const defaultConfigPath = `${process.env.GAMESERVER_CODE_DIR}/assets/minecraft_default_server.properties`;
+        copyFileSync(defaultConfigPath, minecraftConfigPath);
+    }
+
+    installFromS3(instanceMeta: InstanceMetadata, serverFilepath: string) {
+        const s3Url = instanceMeta.tags.gameserverConfig.installFromS3Url
+        logger.info('Downloading server files from s3...', { s3Url });
+        execSync(`aws s3 sync ${s3Url}/ ${serverFilepath}`);
+    }
 
     async getStatus() {
         if (['running', 'status-check-error'].includes(this.status.state)) {

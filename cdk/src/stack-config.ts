@@ -1,17 +1,11 @@
 import { RemovalPolicy } from "aws-cdk-lib";
-import { GameserverConfig, IPPrefixLists } from "./stack-config-types";
-import { CLOUDFRONT_SSL_CERTIFICATE_ARN, GAMEMASTER_LAMBDA_PASSWORD, MINECRAFT_FULL_PASSWORD, MINECRAFT_START_PASSWORD, ROUTE53_ZONE_ID } from "./personal_config";
+import { GameserverConfig, IPPrefixLists, MinecraftJavaConfig } from "./stack-config-types";
+import { CLOUDFRONT_SSL_CERTIFICATE_ARN, GAMEMASTER_LAMBDA_PASSWORD, IV_FULL_PASSWORD, IV_START_PASSWORD, MINECRAFT_FULL_PASSWORD, MINECRAFT_START_PASSWORD, ROUTE53_ZONE_ID } from "./personal_config";
 
+// Server instances the stack will create
 export const serverInstances: GameserverConfig[] = [
     {
-        id: 'gameserver_1',
-        name: 'factorio',
-        startOnNextBoot: 'factorio',
-        instanceType: 't3a.small',
-        ssdStorageCapacityGiB: 8 // $0.64 per month; 8GB expected just for the EC2 Amazon Linux snapshot.
-    },
-    {
-        id: 'gameserver_minecraft',
+        logicalId: 'VanillaMC',
         name: 'minecraft',
         startOnNextBoot: 'minecraft-java',
         instanceType: 'c6a.large',
@@ -23,7 +17,22 @@ export const serverInstances: GameserverConfig[] = [
             full: MINECRAFT_FULL_PASSWORD
         },
         ssdStorageCapacityGiB: 8 // $0.64 per month; 8GB expected just for the EC2 Amazon Linux snapshot.
-    },
+    } as MinecraftJavaConfig,
+    {
+        logicalId: 'IndustrialVillageMC',
+        name: 'industrial-village-mc',
+        startOnNextBoot: 'minecraft-java',
+        instanceType: 'c6a.xlarge',
+        config: { 
+            installFromS3Url: 's3://gameserverstack-s3storagebucketcf59ebf7-hidmmd95ycsc/server_backups/minecraft/industrial_village_1.20.1',
+            startScriptPath: '/run.sh'
+        },
+        passwords: {
+            instanceStart: IV_START_PASSWORD,
+            full: IV_FULL_PASSWORD
+        },
+        ssdStorageCapacityGiB: 8 // $0.64 per month; 8GB expected just for the EC2 Amazon Linux snapshot.
+    } as MinecraftJavaConfig,
 ]
 
 export const stackConfig = {
